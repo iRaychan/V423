@@ -1,6 +1,6 @@
-/* KeySuite V4.23 Service Worker. */
-const CACHE='keysuite-v42300';
-const BOOTSTRAP='<script src="./v41200-bootstrap.js?v=42300"></script>';
+/* KeySuite V4.23.01 Service Worker. */
+const CACHE='keysuite-v42301';
+const BOOTSTRAP='<script src="./v41200-bootstrap.js?v=42301"></script>';
 const SHELL=[
   './','./index.html','./manifest.json','./keylargo-logo.png',
   './chc-g1-price-map-v41409.js','./chc-g1-product-data-v41411.js','./permissions.js','./applications.js','./app.js','./keylab.js','./pricing.js','./quotation-references.js','./categories.js','./pricelist.js','./product.js','./manifold.js','./roles.js','./assembly.js','./motor.js','./coupling.js','./baseplate.js','./quotation-templates.js','./company-settings.js','./keyai.js','./auth.js','./v388-dashboard-keycore.js','./universe.js',

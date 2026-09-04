@@ -52,6 +52,7 @@
     const group=normalizeProductGroup(value);
     if(group==='CHC'||group==='CHC_G1'||group==='CHC_G2')return 'CHC';
     if(group==='ES')return 'ES';
+    if(group==='MOTOR')return 'MOTOR';
     return '';
   };
   const KEYLARGO_ROLE_BRAND=Object.freeze({
@@ -108,11 +109,6 @@
       }
       if(brandKey==='gws'||brandName==='gws'){
         out.push({brand,family:'TANK',key:`${brand.id}|TANK`,series:'GWS Tank'});
-        return;
-      }
-      const compactBrand=(brandKey||brandName).replace(/[^a-z0-9]/g,'');
-      if(compactBrand==='mos'){
-        out.push({brand,family:'MOTOR',key:`${brand.id}|MOTOR`,series:'Motor'});
         return;
       }
       const master=String(brand.brand_type||'').toLowerCase()==='master'||brandKey==='b.g.reich'||brandName==='b.g.reich';

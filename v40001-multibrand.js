@@ -730,9 +730,7 @@
       {label:'End Suction',family:'ES',page:'productEs'},
       {label:'Motor',family:'MOTOR',page:'productMotor'}
     ],
-    'keylargo':[{label:'Baseplate',family:'BASEPLATE',page:'productBaseplate'},{label:'Coupling',family:'COUPLING',page:'productCoupling'},{label:'KeyPLC Panel',family:'KEYPLC',page:'productKeyplc'},{label:'Manifold',family:'MANIFOLD',page:'productManifold'}],
-    'm.o.s':[{label:'Motor',family:'MOTOR',page:'productMotor'}],
-    'mos':[{label:'Motor',family:'MOTOR',page:'productMotor'}]
+    'keylargo':[{label:'Baseplate',family:'BASEPLATE',page:'productBaseplate'},{label:'Coupling',family:'COUPLING',page:'productCoupling'},{label:'KeyPLC Panel',family:'KEYPLC',page:'productKeyplc'},{label:'Manifold',family:'MANIFOLD',page:'productManifold'}]
   };
   const productChcGeneration=()=>window.KeySuiteProduct?.getChcGeneration?.()||(()=>{try{return sessionStorage.getItem('keysuite-v41412-product-chc-generation')==='G1'?'G1':'G2'}catch(_){return 'G2'}})();
   function activateChcGeneration(generation){

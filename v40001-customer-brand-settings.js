@@ -106,10 +106,6 @@
     return out.filter(e=>accountAllows(e.brand.id,e.family));
   }
 
-  function isMosBrand(b){
-    const compact=String(b?.brand_key||b?.brand_name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-    return compact==='mos';
-  }
   function rawPriceEntries(){
     const out=[];
     brands().forEach(b=>{
@@ -125,7 +121,6 @@
           .map(m=>normalizedPriceGroup(m.master_family))
           .filter(g=>['CHC_G1','CHC_G2','ES','MOTOR'].includes(g))
       )];
-      if(isMosBrand(b)&&!groups.includes('MOTOR'))groups.push('MOTOR');
       groups.forEach(g=>out.push({
         brand:b,
         priceGroup:g,
