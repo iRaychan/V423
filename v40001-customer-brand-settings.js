@@ -1,4 +1,4 @@
-/* KeySuite V4.17.03 — Customer-owned Brand settings with central Supabase Price Preference and strict Role Brand scope.
+/* KeySuite V4.23.10 — Customer-owned Brand settings with central Supabase Price Preference and strict Role Brand scope.
  * - Brand Margin belongs to Customer + selling Brand only. No global Brand fallback.
  * - Dashboard Brand / Series Settings Save belongs to the currently selected Customer.
  * - Opening/switching a Customer restores that Customer's Brand / Series preference.
@@ -13,7 +13,7 @@
   if(window.top!==window.self||window.__KEYSUITE_V40001_CUSTOMER_BRAND_SETTINGS__)return;
   window.__KEYSUITE_V40001_CUSTOMER_BRAND_SETTINGS__=true;
 
-  const VERSION='4.21.02';
+  const VERSION='4.23.10';
   const $=id=>document.getElementById(id);
   const norm=v=>String(v??'').trim();
   const low=v=>norm(v).toLowerCase();
@@ -89,6 +89,7 @@
       if(isMaster(b)){
         out.push({brand:b,family:'CHC',productGroup:'CHC_G1',key:keyOf(b.id,'CHC_G1')});
         out.push({brand:b,family:'CHC',productGroup:'CHC_G2',key:keyOf(b.id,'CHC')});
+        out.push({brand:b,family:'BFI',productGroup:'BFI',key:keyOf(b.id,'BFI')});
         out.push({brand:b,family:'ES',productGroup:'ES',key:keyOf(b.id,'ES')});
         return;
       }
@@ -96,6 +97,7 @@
       // V4.21.02: CHC G1 and G2 are independent hydraulic Selection entries.
       if(groups.includes('CHC_G1'))out.push({brand:b,family:'CHC',productGroup:'CHC_G1',key:keyOf(b.id,'CHC_G1')});
       if(groups.includes('CHC_G2')||groups.includes('CHC'))out.push({brand:b,family:'CHC',productGroup:'CHC_G2',key:keyOf(b.id,'CHC')});
+      if(groups.includes('BFI'))out.push({brand:b,family:'BFI',productGroup:'BFI',key:keyOf(b.id,'BFI')});
       if(groups.includes('ES'))out.push({brand:b,family:'ES',productGroup:'ES',key:keyOf(b.id,'ES')});
     });
     return out;
@@ -113,6 +115,7 @@
       if(isMaster(b)){
         out.push({brand:b,priceGroup:'CHC_G1',family:'CHC',selectionKey:keyOf(b.id,'CHC_G1'),key:priceKeyOf(b.id,'CHC_G1')});
         out.push({brand:b,priceGroup:'CHC_G2',family:'CHC',selectionKey:keyOf(b.id,'CHC'),key:priceKeyOf(b.id,'CHC_G2')});
+        out.push({brand:b,priceGroup:'BFI',family:'BFI',selectionKey:keyOf(b.id,'BFI'),key:priceKeyOf(b.id,'BFI')});
         out.push({brand:b,priceGroup:'ES',family:'ES',selectionKey:keyOf(b.id,'ES'),key:priceKeyOf(b.id,'ES')});
         out.push({brand:b,priceGroup:'MOTOR',family:'MOTOR',selectionKey:'',key:priceKeyOf(b.id,'MOTOR'),label:'Motor'});
         return;
@@ -125,7 +128,7 @@
       groups.forEach(g=>out.push({
         brand:b,
         priceGroup:g,
-        family:g==='ES'?'ES':g==='MOTOR'?'MOTOR':'CHC',
+        family:g==='ES'?'ES':g==='BFI'?'BFI':g==='MOTOR'?'MOTOR':'CHC',
         selectionKey:g==='CHC_G1'?keyOf(b.id,'CHC_G1'):g==='CHC_G2'?keyOf(b.id,'CHC'):g==='BFI'?keyOf(b.id,'BFI'):g==='ES'?keyOf(b.id,'ES'):'',
         key:priceKeyOf(b.id,g),
         label:g==='MOTOR'?'Motor':''

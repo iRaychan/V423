@@ -435,7 +435,10 @@ function drawPage2(page:any,logo:any,font:any,bold:any,a:any){
 
   y=drawSection(page,font,'Pumpset',y);
   y=drawRow4(page,font,['Dimension: -','', 'Weight',a.pumpset.weight],y);
-  y=drawRow4(page,font,[{text:'Length',indent:10},a.pumpset.length,'Coupling Type',a.family==='ES'?'Flexible':'-'],y);
+  // V4.23.10: CHC and BFI are close-coupled/multistage outputs here; do not print a Coupling Type placeholder.
+  y=a.family==='ES'
+    ?drawRow4(page,font,[{text:'Length',indent:10},a.pumpset.length,'Coupling Type','Flexible'],y)
+    :drawRow4(page,font,[{text:'Length',indent:10},a.pumpset.length,'',''],y);
   y=drawRow4(page,font,[{text:'Width',indent:10},a.pumpset.width,'',''],y);
   y=drawRow4(page,font,[{text:'Height',indent:10},a.pumpset.height,'',''],y);
 
