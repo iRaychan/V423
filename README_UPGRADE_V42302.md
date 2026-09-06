@@ -14,3 +14,6 @@ This patch adds B.G.Reich BFI globally while leaving CHC C4/C6 independent and u
 `supabase/migrations/20260906160000_v42302_bfi_global.sql`
 
 The migration creates BFI pricing/settings/RPC support and seeds 63 BFI product SKUs using the supplied V1.0 source prices (currently 0.00).
+
+## Telegram / KeyBot deployment dependency fix
+This upgrade package includes the complete local dependency closure required by `supabase functions deploy telegram-webhook`, including unchanged CHC C4/C6, ES, motor/baseplate, dimensions and report-assets files. This allows the V4.23.02 upgrade to be deployed from a clean extracted upgrade folder without missing-module bundling errors.
