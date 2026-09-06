@@ -110,16 +110,17 @@
   };
   const productGroupLabel=value=>{
     const group=normalizeProductGroup(value);
-    return ({CHC:'CHC',CHC_G1:'CHC C4',CHC_G2:'CHC C6',ES:'End Suction',MOTOR:'Motor'})[group]||String(value||group).replace(/_/g,' ');
+    return ({CHC:'CHC',CHC_G1:'CHC C4',CHC_G2:'CHC C6',BFI:'BFI',ES:'End Suction',MOTOR:'Motor'})[group]||String(value||group).replace(/_/g,' ');
   };
   // V4.21.09 naming: Price Group/admin pricing uses G1/G2; customer-facing Series uses C4/C6.
   const priceGroupAdminLabel=value=>{
     const group=normalizeProductGroup(value);
-    return ({CHC:'CHC G2',CHC_G1:'CHC G1',CHC_G2:'CHC G2',ES:'End Suction',MOTOR:'Motor'})[group]||String(value||group).replace(/_/g,' ');
+    return ({CHC:'CHC G2',CHC_G1:'CHC G1',CHC_G2:'CHC G2',BFI:'BFI',ES:'End Suction',MOTOR:'Motor'})[group]||String(value||group).replace(/_/g,' ');
   };
   const PRICE_GROUP_OPTIONS=[
     {value:'CHC_G1',label:'CHC G1'},
     {value:'CHC_G2',label:'CHC G2'},
+    {value:'BFI',label:'BFI'},
     {value:'ES',label:'End Suction'},
     {value:'MOTOR',label:'Motor'}
   ];
@@ -160,7 +161,7 @@
   function pumpDataOfRow(row){try{return JSON.parse(row?.dataset?.pumpData||'{}')}catch(_){return {}}}
   function sourceFamily(source,row=null){return String(source?.product_family||source?.family||source?.productFamily||row?.dataset?.productFamily||'').toUpperCase()}
   function inferFamilyFromPage(page=''){
-    const map={productChc:'CHC',productEs:'ES',productMotor:'MOTOR',productGws:'GWS',productKeyplc:'KEYPLC',productManifold:'MANIFOLD',productCoupling:'COUPLING',productBaseplate:'BASEPLATE',selector:'CHC',selectorEs:'ES'};
+    const map={productChc:'CHC',productBfi:'BFI',productEs:'ES',productMotor:'MOTOR',productGws:'GWS',productKeyplc:'KEYPLC',productManifold:'MANIFOLD',productCoupling:'COUPLING',productBaseplate:'BASEPLATE',selector:'CHC',selectorBfi:'BFI',selectorEs:'ES'};
     return map[page]||'';
   }
   function inferSeries(model,source={}){
@@ -282,6 +283,8 @@
     const send=frame=>{try{if(frame?.contentWindow)frame.contentWindow.postMessage({type:'KEYSUITE_V393_BRAND_CONTEXT',brand:ctx},'*')}catch(_){}};
     if(page==='selector')send($('selectorFrame'));
     if(page==='productChc')send($('productSelectorFrame'));
+    if(page==='selectorBfi')send($('selectorBfiFrame'));
+    if(page==='productBfi')send($('productBfiSelectorFrame'));
     if(page==='selectorEs')send($('selectorEsFrame'));
     if(page==='productEs')send($('productEsSelectorFrame'));
     try{window.dispatchEvent(new CustomEvent('KEYSUITE_V393_BRAND_CONTEXT_CHANGED',{detail:{...ctx,page:page||''}}));}catch(_){}
@@ -559,7 +562,7 @@
   function isSystemBrand(brand){return String(brand?.brand_key||'').toLowerCase()==='b.g.reich';}
   function currentSystemBrandLogo(){
     try{const saved=String(window.KeySuiteSelectorBrand?.getDefaultLogo?.()||'');if(saved)return saved;}catch(_){}
-    for(const id of ['selectorFrame','selectorEsFrame','productSelectorFrame','productEsSelectorFrame']){
+    for(const id of ['selectorFrame','selectorBfiFrame','selectorEsFrame','productSelectorFrame','productBfiSelectorFrame','productEsSelectorFrame']){
       try{const doc=$(id)?.contentDocument;if(!doc)continue;const imgs=[...doc.querySelectorAll('header img,.brand-wrap img,.brand img,img.brand-logo,img.tds-logo')];const img=imgs.find(x=>/reich|brand|logo/i.test(`${x.alt||''} ${x.getAttribute('src')||''}`))||imgs[0];if(img?.src)return img.src;}catch(_){}
     }
     return '';
@@ -727,6 +730,7 @@
     'b.g.reich':[
       {label:'CHC C4',family:'CHC',productGroup:'CHC_G1',page:'productChc',generation:'G1'},
       {label:'CHC C6',family:'CHC',productGroup:'CHC_G2',page:'productChc',generation:'G2'},
+      {label:'BFI',family:'BFI',productGroup:'BFI',page:'productBfi'},
       {label:'End Suction',family:'ES',page:'productEs'},
       {label:'Motor',family:'MOTOR',page:'productMotor'}
     ],
@@ -739,7 +743,7 @@
     try{sessionStorage.setItem('keysuite-v41412-product-chc-generation',code)}catch(_){}
     window.KeySuiteProduct?.setChcGeneration?.(code);
   }
-  function familyPage(fam){return ({CHC:'productChc',ES:'productEs',MOTOR:'productMotor',GWS:'productGws',KEYPLC:'productKeyplc',MANIFOLD:'productManifold',COUPLING:'productCoupling',BASEPLATE:'productBaseplate'})[baseFamily(fam)]||''}
+  function familyPage(fam){return ({CHC:'productChc',BFI:'productBfi',ES:'productEs',MOTOR:'productMotor',GWS:'productGws',KEYPLC:'productKeyplc',MANIFOLD:'productManifold',COUPLING:'productCoupling',BASEPLATE:'productBaseplate'})[baseFamily(fam)]||''}
   function brandFamilies(brand){
     const key=String(brand.brand_key||'').toLowerCase(),built=isMasterBrand(brand)?BUILTIN_FAMILIES['b.g.reich']:BUILTIN_FAMILIES[key];
     if(built)return built.map(f=>{
@@ -757,7 +761,7 @@
       out.push({label:brandSeriesFor(brand,group)||productGroupLabel(group),family,productGroup:group,generation:generationForGroup(group),page});
     });
     return out.sort((a,b)=>{
-      const order=g=>({CHC_G1:0,CHC_G2:1,CHC:2,ES:3,MOTOR:4}[normalizeProductGroup(g)]??9);
+      const order=g=>({CHC_G1:0,CHC_G2:1,CHC:2,BFI:3,ES:4,MOTOR:5}[normalizeProductGroup(g)]??9);
       return order(a.productGroup)-order(b.productGroup)||String(a.label).localeCompare(String(b.label),undefined,{numeric:true});
     });
   }
@@ -838,7 +842,7 @@
     document.addEventListener('input',event=>{if(event.target?.tagName==='SELECT')applyMaterial(event)},true);
   }
 
-  function selectorFrameForPage(page){return $(page==='selectorEs'?'selectorEsFrame':'selectorFrame')}
+  function selectorFrameForPage(page){return $(page==='selectorEs'?'selectorEsFrame':page==='selectorBfi'?'selectorBfiFrame':'selectorFrame')}
   function clearSelectorPresentationContext(page='selector'){
     const frame=selectorFrameForPage(page);
     try{if(frame?.contentWindow){delete frame.contentWindow.__KEYSUITE_MODEL_PRESENTATION_CONTEXT;delete frame.contentWindow.__KEYSUITE_HIDE_INNER_ACTIONS;}}catch(_){}
@@ -857,6 +861,7 @@
   function selectorFallbackButtons(submenu){
     if(!submenu)return {};
     let chc=submenu.querySelector('button[data-v41222-selector-fallback="CHC"]')||submenu.querySelector(':scope > button[data-page="selector"]');
+    let bfi=submenu.querySelector('button[data-v41222-selector-fallback="BFI"]')||submenu.querySelector(':scope > button[data-page="selectorBfi"]');
     let es=submenu.querySelector('button[data-v41222-selector-fallback="ES"]')||submenu.querySelector(':scope > button[data-page="selectorEs"]');
     const create=(page,family,label)=>{
       const b=document.createElement('button');b.type='button';b.dataset.page=page;b.dataset.v41222SelectorFallback=family;b.textContent=label;if(family==='CHC')b.dataset.generation='G2';
@@ -878,11 +883,13 @@
       submenu.insertBefore(b,submenu.firstChild);return b;
     };
     if(!chc)chc=create('selector','CHC','CHC C6');
+    if(!bfi)bfi=create('selectorBfi','BFI','BFI');
     if(!es)es=create('selectorEs','ES','ES');
     const master=masterBrand();
     if(chc){chc.dataset.v41222SelectorFallback='CHC';chc.dataset.generation='G2';chc.textContent=master?(brandSeriesFor(master,'CHC_G2')||'CHC C6'):'CHC C6';}
+    if(bfi){bfi.dataset.v41222SelectorFallback='BFI';bfi.textContent=master?(brandSeriesFor(master,'BFI')||'BFI'):'BFI';}
     if(es){es.dataset.v41222SelectorFallback='ES';es.textContent=master?(brandSeriesFor(master,'ES')||'ES'):'ES';}
-    return {chc,es};
+    return {chc,bfi,es};
   }
   function openSelectorRoute(page){
     if(window.KeySuiteApp?.showPage){window.KeySuiteApp.showPage(page);return true}
@@ -900,16 +907,16 @@
       tree.classList.add('v41223-selector-brand-tree');
     }
     const showFallback=(visible)=>{
-      [fallback.chc,fallback.es].forEach(btn=>{if(btn){btn.hidden=!visible;btn.style.display=visible?'block':'none'}});
+      [fallback.chc,fallback.bfi,fallback.es].forEach(btn=>{if(btn){btn.hidden=!visible;btn.style.display=visible?'block':'none'}});
     };
     const canUse=authority()?.can?.('use_selector')||permission('use_selector')!=='none';
     if(!canUse){tree.innerHTML='';showFallback(false);return}
 
-    const route=(family)=>String(family||'').toUpperCase()==='ES'?'selectorEs':'selector';
+    const route=(family)=>{const f=String(family||'').toUpperCase();return f==='ES'?'selectorEs':f==='BFI'?'selectorBfi':'selector'};
     const pumpFamilies=(brand)=>brandFamilies(brand)
       .filter(f=>{
         const family=String(f.family||'').toUpperCase();
-        if(!['CHC','ES'].includes(family))return false;
+        if(!['CHC','BFI','ES'].includes(family))return false;
         if(!customerAllowsProduct(brand.id,f.productGroup||f.family,f.family))return false;
         return true;
       })

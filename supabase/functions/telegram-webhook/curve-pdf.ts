@@ -4,6 +4,8 @@ import '../shared-chc-g1/chc-data.js';
 import '../shared-chc-g1/chc-selector-core.js';
 import '../shared-chc/chc-data.js';
 import '../shared-chc/chc-selector-core.js';
+import '../shared-bfi/bfi-data.js';
+import '../shared-bfi/bfi-selector-core.js';
 import { CHC_DIMENSIONS } from './chc-dimensions.ts';
 import { CHC_G1_DIMENSIONS } from './chc-g1-dimensions.ts';
 import { REPORT_LOGO_BASE64, ES_DIMENSION_BASE64, CHC_DIMENSION_BASE64 } from './report-assets.ts';
@@ -17,9 +19,12 @@ const CHC_DB:any=(globalThis as any).KeySuiteCHCData; // C6 / G2
 const CHC_CORE:any=(globalThis as any).KeySuiteCHCCore; // C6 / G2
 const CHC_G1_DB:any=(globalThis as any).KeySuiteCHCG1Data;
 const CHC_G1_CORE:any=(globalThis as any).KeySuiteCHCG1Core;
+const BFI_DB:any=(globalThis as any).KeySuiteBFIData;
+const BFI_CORE:any=(globalThis as any).KeySuiteBFICore;
 const MB:any=(globalThis as any).KeySuiteMotorBaseplateV40205;
-if(!CHC_DB||!CHC_CORE||!CHC_G1_DB||!CHC_G1_CORE)throw new Error('KeySuite CHC C4/C6 selector core/data unavailable.');
+if(!CHC_DB||!CHC_CORE||!CHC_G1_DB||!CHC_G1_CORE||!BFI_DB||!BFI_CORE)throw new Error('KeySuite CHC C4/C6 / BFI selector core/data unavailable.');
 function isChcFamily(fam:any){const f=String(fam||'').toUpperCase();return f==='CHC'||f==='CHC_G1'||f==='CHC_G2'}
+function isBfiFamily(fam:any){return String(fam||'').toUpperCase()==='BFI'}
 function chcEngine(fam:any){const f=String(fam||'').toUpperCase();return f==='CHC_G1'?{db:CHC_G1_DB,core:CHC_G1_CORE,generation:'G1',label:'CHC C4',motorEff:'IE2'}:{db:CHC_DB,core:CHC_CORE,generation:'G2',label:'CHC C6',motorEff:'IE3'}}
 
 function chcG1DimensionVariant(material:any){
@@ -123,6 +128,13 @@ function selectChc(q:number,h:number,forcedModel:string='',family:string='CHC'){
   if(wanted){const row=(db?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row)return null;return core.evaluateModel(db,row,q,h,50)}
   return core.select(db,q,h,50).selected;
 }
+
+function selectBfi(q:number,h:number,forcedModel:string=''){
+  const wanted=String(forcedModel||'').trim().toUpperCase();
+  if(wanted){const row=(BFI_DB?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row)return null;return BFI_CORE.evaluateModel(BFI_DB,row,q,h,50)}
+  return BFI_CORE.select(BFI_DB,q,h,50).selected;
+}
+
 function esSelect(q:number,h:number,pole:number,forcedModel:string=''){
   const core=(globalThis as any).ESCore,db=(globalThis as any).ES_SELECTOR_DB;
   if(!core||!db)throw new Error('ES selector engine is unavailable in the Telegram function.');
@@ -324,12 +336,12 @@ function drawPage2(page:any,logo:any,font:any,bold:any,a:any){
 
   y=drawSection(page,font,'Pump',y);
   y=drawRow4(page,font,['Brand',a.brand||'B.G.Reich','Country of Origin','Malaysia'],y);
-  y=drawRow4(page,font,['Type',a.family==='CHC'?`${a.series||'VMS'} Pump`:`${a.series||'ES'} End Suction Pump`,'Country of Manufacture','China'],y);
+  y=drawRow4(page,font,['Type',a.family==='CHC'?`${a.series||'VMS'} Pump`:a.family==='BFI'?`${a.series||'BFI'} Horizontal Multistage Pump`:`${a.series||'ES'} End Suction Pump`,'Country of Manufacture','China'],y);
   y=drawRow4(page,font,['Model',{text:a.model,bold:true},'Suction Size',a.suction],y);
   y=drawRow4(page,font,['Speed',`${fmt(a.rpm,0)} rpm`,'Discharge Size',a.discharge],y);
   y=drawRow4(page,font,['Material: -','', 'Efficiency',`${fmt(a.eff,1)} %`],y);
   y=drawRow4(page,font,[{text:'Casing',indent:10},a.material.casing,'Brake HP',`${fmt(a.brakeHp,1)} HP`],y);
-  y=drawRow4(page,font,[{text:'Impeller',indent:10},a.material.impeller,a.family==='CHC'?'No. of Stage':'Impeller Diameter',a.family==='CHC'?`${fmt(a.stages,0)} Stages`:`${fmt(a.impellerMm,1)} mm`],y);
+  y=drawRow4(page,font,[{text:'Impeller',indent:10},a.material.impeller,(a.family==='CHC'||a.family==='BFI')?'No. of Stage':'Impeller Diameter',(a.family==='CHC'||a.family==='BFI')?`${fmt(a.stages,0)} ${Number(a.stages)===1?'Stage':'Stages'}`:`${fmt(a.impellerMm,1)} mm`],y);
   y=drawRow4(page,font,[{text:'Shaft',indent:10},a.material.shaft,'NPSHr',`${fmt(a.npsh,1)} Mtr`],y);
   y=drawRow4(page,font,['Shaft Seal',a.material.seal,'Max Casing Pressure',`${fmt(a.maxPressure,1)} Bar`],y);
   y=drawRow4(page,font,['Bearing Type',a.family==='CHC'?'Bush':'Ball','',''],y);
@@ -415,6 +427,16 @@ function drawPage3CHC(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   ],[['Weight',d.weight?`${fmt(d.weight,0)} kG`:'-']],16,tableWidths);
   page.drawText('* Approximate dimension & weight',{x:tableX,y:92,size:8,font:font.regular,color:rgb(.10,.10,.10)});
 }
+
+function drawPage3BFI(page:any,logo:any,font:any,bold:any,a:any){
+  drawDimensionHeader(page,logo,bold,a.model);drawCentered(page,bold,'Dimension',306,668,20,rgb(.03,.03,.03));
+  page.drawLine({start:{x:255,y:664},end:{x:357,y:664},thickness:1.2,color:rgb(.03,.03,.03)});
+  const d=a.dim||{},phase=String(a.phase||'3Ph'),pick=(k:string)=>d[`${k} (${phase})`]??d[`${k} (3Ph)`]??d[`${k} (1Ph)`]??d[k];
+  const tableX=132.803150,tableWidths=[64.629921,108.566929,64.629921,108.566929];page.drawText('Table Dimensions',{x:tableX,y:520,size:11.5,font:bold,color:rgb(.03,.03,.03)});
+  const left=['H','H2','L1','L2','L3','L4','L5','L6'].map(k=>[k,finite(pick(k))?`${fmt(pick(k),0)} mm`:'-'] as [string,string]);
+  const right=[['B1',finite(pick('B1'))?`${fmt(pick('B1'),0)} mm`:'-'],['B2',finite(pick('B2'))?`${fmt(pick('B2'),0)} mm`:'-'],['Inlet',a.suction||'-'],['Outlet',a.discharge||'-'],['Weight',finite(a.weightKg)?`${fmt(a.weightKg,1)} kg`:'-']] as [string,string][];
+  drawDimensionTable(page,font,tableX,500,left,right,16,tableWidths);page.drawText('* Approximate dimension & weight',{x:tableX,y:352,size:8,font:font.regular,color:rgb(.10,.10,.10)});
+}
 function drawPage3ES(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   drawDimensionHeader(page,logo,bold,a.model);
   drawCentered(page,bold,'Dimension',306,668,20,rgb(.03,.03,.03));
@@ -445,6 +467,7 @@ function drawPage3ES(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
 }
 function materialFor(fam:string,option:any=''){
   const m=String(option||'').toUpperCase().replace(/\s+/g,'');
+  if(isBfiFamily(fam))return {casing:'-',impeller:'-',shaft:'-',seal:'Mechanical Seal'};
   if(isChcFamily(fam)){
     if(m==='SS316')return {casing:'SS316',impeller:'SS316',shaft:'SS316',seal:'Mechanical Seal'};
     if(m==='SS304')return {casing:'SS304',impeller:'SS304',shaft:'SS304',seal:'Mechanical Seal'};
@@ -463,6 +486,10 @@ export function selectPumpSummary(family:string,q:number,h:number,esPole=0,force
     if(!s)throw new Error(`No ${engine.label} model can meet ${fmt(q)} m³/hr @ ${fmt(h)} Mtr.`);
     return {brand:'B.G.Reich',family:'CHC',series:engine.label,generation_code:engine.generation,keysuite_generation_code:engine.generation,model:String(s.model||''),motor_kw:Number(s.motor_kw||0),motor_hp:Number(s.motor_hp||0),efficiency:Number(s.eff||0),npshr:Number(s.npsh||0),rpm:Number(s.rpm||engine.db?.curves?.[s.series]?.speed_rpm||2900),pole:2,stages:Number(s.stages||0),connection:String(s.connection||'-'),requested_flow_m3h:Number(q),requested_head_m:Number(h),selector_core_version:engine.core.VERSION};
   }
+  if(isBfiFamily(fam)){
+    const s:any=selectBfi(Number(q),Number(h),forcedModel);if(!s)throw new Error(`No BFI model can meet ${fmt(q)} m³/hr @ ${fmt(h)} Mtr.`);
+    return {brand:'B.G.Reich',family:'BFI',series:String(s.series||'BFI'),model:String(s.model||''),motor_kw:Number(s.motor_kw||0),motor_hp:Number(s.motor_hp||0),efficiency:Number(s.eff||0),npshr:Number(s.npsh||0),rpm:Number(s.rpm||2900),pole:2,stages:Number(s.stages||0),connection:String(s.connection||'-'),requested_flow_m3h:Number(q),requested_head_m:Number(h),selector_core_version:BFI_CORE.VERSION};
+  }
   if(fam==='ES'){
     const pole=Number(esPole);
     if(pole!==2&&pole!==4)throw new Error('ES selection requires 2 Pole or 4 Pole.');
@@ -480,6 +507,10 @@ export function selectPumpCandidates(family:string,q:number,h:number,esPole=0,li
     const engine=chcEngine(fam),result=engine.core.select(engine.db,Number(q),Number(h),50),rows=Array.isArray(result?.candidates)?result.candidates:[];
     return rows.slice(0,max).map((x:any,rank:number)=>({brand:'B.G.Reich',family:'CHC',series:engine.label,generation_code:engine.generation,keysuite_generation_code:engine.generation,model:String(x.model||''),motor_kw:Number(x.motor_kw||0),motor_hp:Number(x.motor_hp||0),efficiency:Number(x.eff||0),npshr:Number(x.npsh||0),rpm:Number(x.rpm||engine.db?.curves?.[x.series]?.speed_rpm||2900),pole:2,stages:Number(x.stages||0),connection:String(x.connection||'-'),requested_flow_m3h:Number(q),requested_head_m:Number(h),selector_core_version:engine.core.VERSION,selector_rank:rank+1}));
   }
+  if(isBfiFamily(fam)){
+    const result=BFI_CORE.select(BFI_DB,Number(q),Number(h),50),rows=Array.isArray(result?.candidates)?result.candidates:[];
+    return rows.slice(0,max).map((x:any,rank:number)=>({brand:'B.G.Reich',family:'BFI',series:String(x.series||'BFI'),model:String(x.model||''),motor_kw:Number(x.motor_kw||0),motor_hp:Number(x.motor_hp||0),efficiency:Number(x.eff||0),npshr:Number(x.npsh||0),rpm:Number(x.rpm||2900),pole:2,stages:Number(x.stages||0),connection:String(x.connection||'-'),requested_flow_m3h:Number(q),requested_head_m:Number(h),selector_core_version:BFI_CORE.VERSION,selector_rank:rank+1}));
+  }
   if(fam==='ES'){
     const pole=Number(esPole),core=(globalThis as any).ESCore,db=(globalThis as any).ES_SELECTOR_DB;if(!core||!db||![2,4].includes(pole))return [];
     const rpm=pole===2?2900:1450,results=core.selectPumpsMulti(db,{dutyPoints:[{label:'D1',totalFlowLps:Number(q)/3.6,headM:Number(h),pumps:1}],mode:'trim',rpm});
@@ -489,9 +520,9 @@ export function selectPumpCandidates(family:string,q:number,h:number,esPole=0,li
 }
 
 export async function generateCurvePdf(family:string,q:number,h:number,dutyText:string,baseUrl:string,esPole=0,forcedModel:string='',displayIdentity:any=null){
-  const fam=String(family||'').toUpperCase(),isChc=isChcFamily(fam),engine=isChc?chcEngine(fam):null;
+  const fam=String(family||'').toUpperCase(),isChc=isChcFamily(fam),isBfi=isBfiFamily(fam),engine=isChc?chcEngine(fam):null;
   let model='',motorKw=0,motorHp=0,eff=0,npsh=0,selectionShaft=0,dutyBrakeHp=0,rpm=0,pole=2,hz=50;
-  let suction='-',discharge='-',stages=0,impellerMm=0,maxPressure=0,dim:any={},esPs:any=null;
+  let suction='-',discharge='-',stages=0,impellerMm=0,maxPressure=0,dim:any={},esPs:any=null,weightKg=0,phase='3Ph';
   let headPoints:XY[]=[],effPoints:XY[]=[],powerPoints:XY[]=[],npsPoints:XY[]=[];
 
   if(isChc){
@@ -502,6 +533,11 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
     headPoints=sampleFit(s.headFit,120,engine?.core);effPoints=sampleFit(s.effFit,120,engine?.core);
     powerPoints=sampleFit(s.powerFit,120,engine?.core).map((p:any)=>({x:Number(p.x),y:Number(p.y)*1.34102209}));
     npsPoints=sampleFit(s.npshFit,120,engine?.core);
+  }else if(isBfi){
+    const s:any=selectBfi(q,h,forcedModel);if(!s)throw new Error(`No BFI model can meet ${fmt(q)} m³/hr @ ${fmt(h)} Mtr.`);
+    model=String(s.model);motorKw=Number(s.motor_kw||0);motorHp=Number(s.motor_hp||0);eff=Number(s.eff||0);npsh=Number(s.npsh||0);selectionShaft=Number(s.shaft||0);rpm=Number(s.rpm||2900);pole=2;hz=50;
+    suction=String(s.inlet||s.connection||'-');discharge=String(s.outlet||s.connection||'-');stages=Number(s.stages||0);maxPressure=Number(s.max_pressure_bar||0);dim=s.dimensions||{};weightKg=Number(s.weight_kg||0);phase=Array.isArray(s.phases)&&s.phases.includes('3Ph')?'3Ph':String(s.phases?.[0]||'1Ph');
+    headPoints=sampleFit(s.headFit,120,BFI_CORE);effPoints=sampleFit(s.effFit,120,BFI_CORE);powerPoints=sampleFit(s.powerFit,120,BFI_CORE).map((p:any)=>({x:Number(p.x),y:Number(p.y)*1.34102209}));npsPoints=sampleFit(s.npshFit,120,BFI_CORE);
   }else if(fam==='ES'){
     pole=Number(esPole);if(pole!==2&&pole!==4)throw new Error('ES selection requires 2 Pole or 4 Pole.');
     const s=esSelect(q,h,pole,forcedModel);if(!s)throw new Error(`No ES ${pole} Pole model can meet ${fmt(q)} m³/hr @ ${fmt(h)} Mtr.`);
@@ -562,21 +598,22 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
       b64=String((CHC_DIMENSION_BASE64 as any)[series]||'');
       if(b64)dimImage=await pdf.embedPng(b64bytes(b64));
     }
-  }else dimImage=await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
+  }else if(!isBfi)dimImage=await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
 
   const mt=motorTech(motorHp,pole,isChc?String(engine?.motorEff||'IE3'):'IE3');
   const pumpEnvelope=isChc?(Number(dim.d1||0)/2+Number(dim.d2||0)):0;
   const chcLength=isChc?Math.max(pumpEnvelope,Number(dim.pumpL||0)):0,chcWidth=isChc?Math.max(pumpEnvelope,Number(dim.pumpW||0)):0;
   const pumpset=isChc
     ?{length:chcLength?`${fmt(chcLength,0)} mm`:'-',width:chcWidth?`${fmt(chcWidth,0)} mm`:'-',height:dim.height?`${fmt(dim.height,0)} mm`:'-',weight:dim.weight?`${fmt(dim.weight,0)} kG`:'-'}
+    :isBfi?{length:finite(dim?.[`L1 (${phase})`])?`${fmt(dim[`L1 (${phase})`],0)} mm`:'-',width:finite(dim?.[`B1 (${phase})`])?`${fmt(dim[`B1 (${phase})`],0)} mm`:'-',height:finite(dim?.[`H (${phase})`]??dim?.[`H2 (${phase})`])?`${fmt(dim[`H (${phase})`]??dim[`H2 (${phase})`],0)} mm`:'-',weight:weightKg?`${fmt(weightKg,1)} kg`:'-'}
     :{length:esPs?.dimensions?.overall?.lengthMm?`${fmt(esPs.dimensions.overall.lengthMm,0)} mm`:'-',width:esPs?.dimensions?.overall?.widthMm?`${fmt(esPs.dimensions.overall.widthMm,0)} mm`:'-',height:esPs?.dimensions?.overall?.heightMm?`${fmt(esPs.dimensions.overall.heightMm,0)} mm`:'-',weight:esPs?.dimensions?.overall?.estimatedPumpsetWeightKg?`${fmt(esPs.dimensions.overall.estimatedPumpsetWeightKg,0)} kg`:'-'};
 
-  const displayBrand=String(displayIdentity?.brand||'B.G.Reich').trim()||'B.G.Reich',displaySeries=String(displayIdentity?.series||(isChc?String(engine?.label||'CHC'):'ES')).trim()||(isChc?String(engine?.label||'CHC'):'ES'),displayModel=String(displayIdentity?.model||model).trim()||model;
-  const pageArgs={family:isChc?'CHC':fam,brand:displayBrand,series:displaySeries,model:displayModel,masterModel:model,dutyText,q,motorHp,motorKw,pole,hz,rpm,eff,npsh,brakeHp,suction,discharge,stages,impellerMm,maxPressure,dim,esPumpset:esPs,motorTech:mt,motorEfficiencyClass:isChc?String(engine?.motorEff||'IE3'):'IE3',pumpset,material:materialFor(isChc?'CHC':fam,displayIdentity?.material),charts};
+  const displayBrand=String(displayIdentity?.brand||'B.G.Reich').trim()||'B.G.Reich',displaySeries=String(displayIdentity?.series||(isChc?String(engine?.label||'CHC'):isBfi?'BFI':'ES')).trim()||(isChc?String(engine?.label||'CHC'):isBfi?'BFI':'ES'),displayModel=String(displayIdentity?.model||model).trim()||model;
+  const pageArgs={family:isChc?'CHC':fam,brand:displayBrand,series:displaySeries,model:displayModel,masterModel:model,dutyText,q,motorHp,motorKw,pole,hz,rpm,eff,npsh,brakeHp,suction,discharge,stages,impellerMm,maxPressure,dim,esPumpset:esPs,motorTech:mt,motorEfficiencyClass:isChc?String(engine?.motorEff||'IE3'):'IE3',pumpset,weightKg,phase,material:materialFor(isChc?'CHC':fam,displayIdentity?.material),charts};
 
   const p1=pdf.addPage(LETTER);drawPage1(p1,logo,regular,bold,pageArgs);
   const p2=pdf.addPage(LETTER);drawPage2(p2,logo,font,bold,pageArgs);
-  const p3=pdf.addPage(LETTER);isChc?drawPage3CHC(p3,logo,font,bold,pageArgs,dimImage):drawPage3ES(p3,logo,font,bold,pageArgs,dimImage);
+  const p3=pdf.addPage(LETTER);isChc?drawPage3CHC(p3,logo,font,bold,pageArgs,dimImage):isBfi?drawPage3BFI(p3,logo,font,bold,pageArgs):drawPage3ES(p3,logo,font,bold,pageArgs,dimImage);
 
   pdf.setTitle(`${displayModel} Selection`);
   pdf.setSubject('KeySuite KeySelector frozen-layout pump performance report');
@@ -586,7 +623,7 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
   return {
     bytes:new Uint8Array(bytes),filename:`${safe||fam}_Selection.pdf`,model:displayModel,master_model:model,brand:displayBrand,series:displaySeries,
     motor_kw:motorKw,motor_hp:motorHp,efficiency:eff,npshr:npsh,shaft_kw:selectionShaft,
-    pole:fam==='ES'?pole:null,rpm,selector_core_version:isChc?engine?.core?.VERSION:null,
+    pole:fam==='ES'?pole:null,rpm,selector_core_version:isChc?engine?.core?.VERSION:isBfi?BFI_CORE.VERSION:null,
     pdf_layout:'KeySelector frozen layout',pdf_layout_version:'4.12.20'
   };
 }

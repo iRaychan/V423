@@ -51,6 +51,7 @@
   const hydraulicFamily=value=>{
     const group=normalizeProductGroup(value);
     if(group==='CHC'||group==='CHC_G1'||group==='CHC_G2')return 'CHC';
+    if(group==='BFI')return 'BFI';
     if(group==='ES')return 'ES';
     if(group==='MOTOR')return 'MOTOR';
     return '';
@@ -116,9 +117,10 @@
         [
           ['CHC_G1','CHC'],
           ['CHC_G2','CHC'],
+          ['BFI','BFI'],
           ['ES','ES'],
           ['MOTOR','MOTOR']
-        ].forEach(([group,family])=>out.push({brand,family,productGroup:group,key:`${brand.id}|${group}`,series:String(api?.brandSeriesFor?.(brand,group)||({CHC_G1:'CHC C4',CHC_G2:'CHC C6',ES:'End Suction',MOTOR:'Motor'}[group]||family))}));
+        ].forEach(([group,family])=>out.push({brand,family,productGroup:group,key:`${brand.id}|${group}`,series:String(api?.brandSeriesFor?.(brand,group)||({CHC_G1:'CHC C4',CHC_G2:'CHC C6',BFI:'BFI',ES:'End Suction',MOTOR:'Motor'}[group]||family))}));
         return;
       }
       const seen=new Set();

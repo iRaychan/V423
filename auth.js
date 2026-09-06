@@ -56,8 +56,8 @@
   function showLogin(text='',type='error'){const key=el('keyButton');if(key){key.hidden=true;key.style.display='none'}setView('login');busy(false);message(text,type);el('loginPassword').value='';lockSelector()}
   function showLoading(text){el('loadingText').textContent=text||'Checking secure access…';setView('loading')}
   function friendly(error){const text=String(error?.message||'').toLowerCase();if(text.includes('invalid login credentials'))return 'The email or password is incorrect.';if(text.includes('email not confirmed'))return 'This email account has not been confirmed yet.';if(text.includes('rate limit'))return 'Too many attempts. Please try again later.';return error?.message||'Unable to sign in.'}
-  function unlockSelector(){[['selectorFrame','selector/index.html'],['selectorEsFrame','selector-es/index.html']].forEach(([id,fallback])=>{const frame=el(id);if(frame&&frame.getAttribute('src')==='about:blank')frame.src=frame.dataset.src||fallback})}
-  function lockSelector(){/* V3.8.5: keep CHC/ES selector engines loaded. The authenticated app view is already hidden at login, and blanking both iframes caused the shared Selection launch regression. */const frame=el('productSelectorFrame');if(frame&&frame.getAttribute('src')!=='about:blank')frame.src='about:blank'}
+  function unlockSelector(){[['selectorFrame','selector/index.html'],['selectorEsFrame','selector-es/index.html'],['selectorBfiFrame','selector-bfi/index.html?v=42302']].forEach(([id,fallback])=>{const frame=el(id);if(frame&&frame.getAttribute('src')==='about:blank')frame.src=frame.dataset.src||fallback})}
+  function lockSelector(){/* V3.8.5: keep CHC/ES selector engines loaded. The authenticated app view is already hidden at login, and blanking both iframes caused the shared Selection launch regression. */for(const id of ['productSelectorFrame','productBfiSelectorFrame']){const frame=el(id);if(frame&&frame.getAttribute('src')!=='about:blank')frame.src='about:blank'}}
 
   async function verify(email){
     const {data,error}=await client.from('ks_user_access').select('email,employee_id,company_id,role,display_name,active').eq('email',String(email||'').toLowerCase()).limit(1);
@@ -87,6 +87,14 @@
       console.warn('CHC C4 independent Price List is not installed yet. Run V41410_CHC_G1_INDEPENDENT_PRICELIST.sql.',error);
       chcG1Products={data:[]};
     }
+    let bfiProducts={data:[]};
+    try{
+      bfiProducts=await client.from('ks_products_bfi').select('*').eq('status','active').order('source_row');
+      if(bfiProducts.error)throw bfiProducts.error;
+    }catch(error){
+      console.warn('BFI database Price List is not installed yet. Static BFI technical data will remain available; run V42302_BFI_GLOBAL.sql for pricing.',error);
+      bfiProducts={data:[]};
+    }
     let customerPricingRows=[];
     try{const result=await client.rpc('keysuite_get_customer_pricing_v222');if(result.error)throw result.error;customerPricingRows=Array.isArray(result.data)?result.data:(result.data?[result.data]:[])}catch(error){
       console.warn('V2.22 Customer pricing is not available yet. Customer-specific percentages will remain zero until the migration is run.',error);
@@ -98,6 +106,8 @@
     const chcRmbMultiplier=Number(setting.chc_rmb_multiplier??setting.rmb_multiplier??.65);
     const gwsUsdMultiplier=Number(setting.gws_usd_multiplier??setting.usd_multiplier??5.8);
     const gwsRmbMultiplier=Number(setting.gws_rmb_multiplier??setting.rmb_multiplier??.65);
+    const bfiUsdMultiplier=Number(setting.bfi_usd_multiplier??1);
+    const bfiRmbMultiplier=Number(setting.bfi_rmb_multiplier??1);
     const esUsdMultiplier=Number(setting.es_usd_multiplier??setting.usd_multiplier??5.8);
     const esRmbMultiplier=Number(setting.es_rmb_multiplier??setting.rmb_multiplier??.65);
     const keyplcUsdMultiplier=Number(setting.keyplc_usd_multiplier??setting.usd_multiplier??5.8);
@@ -115,13 +125,13 @@
     return {
       version:'3.1',release_date:'2026-08-07',currency:setting.currency||'MYR',
       usd_multiplier:chcUsdMultiplier,rmb_multiplier:chcRmbMultiplier,myr_multiplier:1,
-      productMultipliers:{CHC:{USD:chcUsdMultiplier,RMB:chcRmbMultiplier,MYR:1},ES:{USD:esUsdMultiplier,RMB:esRmbMultiplier,MYR:1},GWS:{USD:gwsUsdMultiplier,RMB:gwsRmbMultiplier,MYR:1},KEYPLC:{USD:keyplcUsdMultiplier,RMB:keyplcRmbMultiplier,MYR:1},MANIFOLD:{USD:manifoldUsdMultiplier,RMB:manifoldRmbMultiplier,MYR:1},MOTOR:{USD:motorUsdMultiplier,RMB:motorRmbMultiplier,MYR:1},COUPLING:{USD:couplingUsdMultiplier,RMB:couplingRmbMultiplier,MYR:1},BASEPLATE:{USD:1,RMB:1,MYR:1}},
+      productMultipliers:{CHC:{USD:chcUsdMultiplier,RMB:chcRmbMultiplier,MYR:1},BFI:{USD:bfiUsdMultiplier,RMB:bfiRmbMultiplier,MYR:1},ES:{USD:esUsdMultiplier,RMB:esRmbMultiplier,MYR:1},GWS:{USD:gwsUsdMultiplier,RMB:gwsRmbMultiplier,MYR:1},KEYPLC:{USD:keyplcUsdMultiplier,RMB:keyplcRmbMultiplier,MYR:1},MANIFOLD:{USD:manifoldUsdMultiplier,RMB:manifoldRmbMultiplier,MYR:1},MOTOR:{USD:motorUsdMultiplier,RMB:motorRmbMultiplier,MYR:1},COUPLING:{USD:couplingUsdMultiplier,RMB:couplingRmbMultiplier,MYR:1},BASEPLATE:{USD:1,RMB:1,MYR:1}},
       fuel_price:Number(setting.fuel_price??2),fuel_base_price:Number(setting.fuel_base_price??2),baseplateCosting:baseplateCosting,keylabConfig:parseJson(setting.keylab_config),customerPricing:null,customerPricingRows:normalizedCustomerRows,
       companies:(companies.data||[]).map(c=>({id:c.id,name:c.company_name,category:c.pricing_category,delivery_distance:Number(c.delivery_distance||0),phone:c.company_phone,term_days:c.term_days,address:c.address,tin:c.tin_number,business_registration_no:c.business_registration_no,sst_no:c.sst_no,msic_code:c.msic_code,business_activities:c.business_activities})),
       users:(users.data||[]).map(u=>({id:u.id,company_id:u.company_id,source_company_id:u.source_company_id,prefix:u.prefix,name:u.full_name,phone:u.phone,email:u.email})),
       categories:(categories.data||[]).map(c=>{
         const rules=parseRules(c.product_rules),chcFallback={margin:Number(c.chc_margin??c.chc_factor??.38),normal:0,rare:0,transport:Number(c.transport??30),useCommission:true,useSetDiscount:true,useFinalDiscount:true,useFuelCharge:true,currencies:[]},otherFallback={margin:0,normal:0,rare:0,transport:0,useCommission:true,useSetDiscount:true,useFinalDiscount:true,useFuelCharge:true,currencies:[]};
-        return {id:c.id,name:c.category_name,productRules:{CHC:normalizeRule(rules.CHC,chcFallback),CHC_G1:normalizeRule(rules.CHC_G1,otherFallback),CHC_G2:normalizeRule(rules.CHC_G2||rules.CHC,chcFallback),ES:normalizeRule(rules.ES,otherFallback),GWS:normalizeRule(rules.GWS,otherFallback),KEYPLC:normalizeRule(rules.KEYPLC,otherFallback),MANIFOLD:normalizeRule(rules.MANIFOLD,otherFallback),MOTOR:normalizeRule(rules.MOTOR,otherFallback),COUPLING:normalizeRule(rules.COUPLING,otherFallback),BASEPLATE:normalizeRule(rules.BASEPLATE,otherFallback)},margins:{CHC:chcFallback.margin,CHC_G2:chcFallback.margin},factors:{CHC:chcFallback.margin,CHC_G2:chcFallback.margin},transport:chcFallback.transport};
+        return {id:c.id,name:c.category_name,productRules:{CHC:normalizeRule(rules.CHC,chcFallback),CHC_G1:normalizeRule(rules.CHC_G1,otherFallback),CHC_G2:normalizeRule(rules.CHC_G2||rules.CHC,chcFallback),BFI:normalizeRule(rules.BFI,otherFallback),ES:normalizeRule(rules.ES,otherFallback),GWS:normalizeRule(rules.GWS,otherFallback),KEYPLC:normalizeRule(rules.KEYPLC,otherFallback),MANIFOLD:normalizeRule(rules.MANIFOLD,otherFallback),MOTOR:normalizeRule(rules.MOTOR,otherFallback),COUPLING:normalizeRule(rules.COUPLING,otherFallback),BASEPLATE:normalizeRule(rules.BASEPLATE,otherFallback)},margins:{CHC:chcFallback.margin,CHC_G2:chcFallback.margin},factors:{CHC:chcFallback.margin,CHC_G2:chcFallback.margin},transport:chcFallback.transport};
       }),
       products:(products.data||[]).map(p=>({
         id:p.id,category:p.product_category,model:p.model,source_row:p.source_row,
@@ -149,6 +159,11 @@
           MYR:{CHC:String(p.chc_rarity_myr||'common').toLowerCase(),CHCS:String(p.chcs_rarity_myr||'common').toLowerCase(),CHCN:String(p.chcn_rarity_myr||'common').toLowerCase()}
         }
       })),
+      bfiProducts:(()=>{
+        const staticRows=window.KeySuiteBFIProductData?.models||[];
+        const byModel=new Map((bfiProducts.data||[]).map(r=>[String(r.model||'').toLowerCase(),r]));
+        return staticRows.map(base=>{const r=byModel.get(String(base.model||'').toLowerCase())||{};const rarity=(k)=>String(r[k]||'common').toLowerCase();return {...base,id:r.id||base.id,source_row:r.source_row||base.source_row,pricesByCurrency:{USD:{'1Ph':r.price_usd_1ph===null||r.price_usd_1ph===undefined?base.pricesByCurrency?.USD?.['1Ph']:Number(r.price_usd_1ph),'3Ph':r.price_usd_3ph===null||r.price_usd_3ph===undefined?base.pricesByCurrency?.USD?.['3Ph']:Number(r.price_usd_3ph)},RMB:{'1Ph':r.price_rmb_1ph===null||r.price_rmb_1ph===undefined?base.pricesByCurrency?.RMB?.['1Ph']:Number(r.price_rmb_1ph),'3Ph':r.price_rmb_3ph===null||r.price_rmb_3ph===undefined?base.pricesByCurrency?.RMB?.['3Ph']:Number(r.price_rmb_3ph)},MYR:{'1Ph':r.price_myr_1ph===null||r.price_myr_1ph===undefined?base.pricesByCurrency?.MYR?.['1Ph']:Number(r.price_myr_1ph),'3Ph':r.price_myr_3ph===null||r.price_myr_3ph===undefined?base.pricesByCurrency?.MYR?.['3Ph']:Number(r.price_myr_3ph)}},rarityByCurrency:{USD:{'1Ph':rarity('rarity_usd_1ph'),'3Ph':rarity('rarity_usd_3ph')},RMB:{'1Ph':rarity('rarity_rmb_1ph'),'3Ph':rarity('rarity_rmb_3ph')},MYR:{'1Ph':rarity('rarity_myr_1ph'),'3Ph':rarity('rarity_myr_3ph')}}};});
+      })(),
       esProducts:(esProducts.data||[]).map(p=>({id:p.id,model:p.model,source_row:p.source_row,rarity:String(p.rarity||'common').toLowerCase(),variants:Array.isArray(p.variants)?p.variants:(typeof p.variants==='object'?p.variants:[])})),
       gwsProducts:(gwsProducts.data||[]).map(p=>({
         id:p.id,model:p.model,source_row:p.source_row,seriesCode:p.series_code||'',seriesName:p.series_name||'',sizeCode:p.size_code||p.model,sizeLitres:Number(p.size_litres||String(p.size_code||p.model).replace(/\D/g,'')||0),pressureBar:Number(p.pressure_bar||0),
@@ -218,7 +233,7 @@
       session=s;access=userAccess;window.KEYSUITE_ACCESS=access;await loadRolePermissions();await window.KeySuiteAuthority?.init?.(access);const savedProfile=await loadUserProfile(s?.user?.email||'');profile=buildProfile(s,access,data,savedProfile);
       window.KEYSUITE_SECURE_DATA=data;window.KeySuiteKeyLab?.applyData?.(data);applyProfile(profile);
       try{window.dispatchEvent(new CustomEvent('KEYSUITE_AUTH_CONTEXT_READY',{detail:{company_id:profile?.company_id||userAccess?.company_id||'',email:profile?.email||'',role:profile?.role||''}}))}catch(_){}
-      window.KeySuitePricing?.init(data,access);window.KeySuiteCategories?.init(data,access);window.KeySuiteCompanySettings?.init(data,access);window.KeySuitePriceList?.init(data,access);window.KeySuiteManifold?.init(data,access);window.KeySuiteMotor?.init(data,access);window.KeySuiteCoupling?.init(data,access);window.KeySuiteBaseplate?.init(data,access);window.KeySuiteRoles?.init(access);window.KeySuiteKeyAI?.init?.(access);await window.KeySuiteTemplates?.init?.(access);await window.KeySuiteQuotationReferences?.init?.(profile);window.KeySuiteApp?.refreshNewQuotationReference?.();unlockSelector();
+      window.KeySuitePricing?.init(data,access);window.KeySuiteCategories?.init(data,access);window.KeySuiteCompanySettings?.init(data,access);window.KeySuitePriceList?.init(data,access);window.KeySuiteBFI?.init?.(data,access);window.KeySuiteManifold?.init(data,access);window.KeySuiteMotor?.init(data,access);window.KeySuiteCoupling?.init(data,access);window.KeySuiteBaseplate?.init(data,access);window.KeySuiteRoles?.init(access);window.KeySuiteKeyAI?.init?.(access);await window.KeySuiteTemplates?.init?.(access);await window.KeySuiteQuotationReferences?.init?.(profile);window.KeySuiteApp?.refreshNewQuotationReference?.();unlockSelector();
       showLoading('Loading your customer access…');
       try{await window.KeySuiteCustomerStore?.load?.()}catch(error){console.warn('Customer load warning',error)}
       try{await window.KeySuiteNoteStore?.load?.()}catch(error){console.warn('Global Note load warning',error)}

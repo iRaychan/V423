@@ -158,7 +158,7 @@ document.querySelectorAll('[data-nav-toggle]').forEach(button=>button.addEventLi
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 const keyButton=document.getElementById('keyButton');
 if(keyButton){keyButton.addEventListener('click',()=>showPage('keyDashboard'));}
-const KEY_PAGE_PERMISSIONS={keyDashboard:'key_dashboard',roleManagement:'manage_roles',categoryManagement:'manage_categories',priceListDashboard:'manage_price_list',chcPriceList:'manage_price_list',gwsPriceList:'manage_price_list',esPriceList:'manage_price_list',keyplcPriceList:'manage_price_list',manifoldPriceList:'manage_price_list',baseplateSeriesList:'manage_price_list',baseplatePriceList:'manage_price_list',motorPriceList:'manage_price_list',couplingPriceList:'manage_price_list',keyLabPriceList:'manage_price_list',companySettings:'customer_settings',companyPricing:'company_pricing',keyAiSettings:'keyai_access'};
+const KEY_PAGE_PERMISSIONS={keyDashboard:'key_dashboard',roleManagement:'manage_roles',categoryManagement:'manage_categories',priceListDashboard:'manage_price_list',chcPriceList:'manage_price_list',bfiPriceList:'manage_price_list',gwsPriceList:'manage_price_list',esPriceList:'manage_price_list',keyplcPriceList:'manage_price_list',manifoldPriceList:'manage_price_list',baseplateSeriesList:'manage_price_list',baseplatePriceList:'manage_price_list',motorPriceList:'manage_price_list',couplingPriceList:'manage_price_list',keyLabPriceList:'manage_price_list',companySettings:'customer_settings',companyPricing:'company_pricing',keyAiSettings:'keyai_access'};
 function permissionLevel(key){return window.KeySuitePermissions?.level?.(key,currentRole())||(currentRole()==='owner'?'full':'none')}
 function hasPermission(key){return permissionLevel(key)!=='none'}
 function syncOwnerKeyVisibility(){
@@ -200,6 +200,7 @@ function showPage(id){
  window.KeySuiteCategories?.pageShown?.(id);
  window.KeySuitePriceList?.pageShown?.(id);
  window.KeySuiteProduct?.pageShown?.(id);
+ window.KeySuiteBFI?.pageShown?.(id);
  window.KeySuiteManifold?.pageShown?.(id);
  window.KeySuiteMotor?.pageShown?.(id);
  window.KeySuiteCoupling?.pageShown?.(id);
@@ -1391,16 +1392,18 @@ async function routeEsSelection(p={},route='quotation'){
 window.addEventListener('message',function(event){
  if(!event.data)return;
  const fromEs=event.source===$('selectorEsFrame')?.contentWindow||String(event.data.product||'').toUpperCase()==='ES';
- if(event.data.type==='KEYSUITE_SELECTOR_HEIGHT'&&fromEs){const frame=$('selectorEsFrame'),height=Math.max(1200,Math.min(6000,Number(event.data.height)||2600));if(frame)frame.style.height=`${Math.ceil(height+8)}px`;return}
+ const fromBfi=event.source===$('selectorBfiFrame')?.contentWindow||event.source===$('productBfiSelectorFrame')?.contentWindow||String(event.data.product||event.data.family||'').toUpperCase()==='BFI';
+ if(event.data.type==='KEYSUITE_SELECTOR_HEIGHT'&&(fromEs||fromBfi)){const frame=$(fromBfi?'selectorBfiFrame':'selectorEsFrame'),height=Math.max(1200,Math.min(6000,Number(event.data.height)||(fromBfi?1900:2600)));if(frame)frame.style.height=`${Math.ceil(height+8)}px`;return}
  if(event.data.type==='KEYSUITE_SELECTION_CHANGED'){
-   if(!fromEs)updateConnectionAvailabilityFromSelection(event.data.payload||{});
+   if(!fromEs&&!fromBfi)updateConnectionAvailabilityFromSelection(event.data.payload||{});
    return;
  }
- if(event.data.type==='KEYSUITE_SELECTION_EMPTY'){alert(`Please run an ${fromEs?'ES':'CHC'} selection first.`);return}
+ if(event.data.type==='KEYSUITE_SELECTION_EMPTY'){alert(`Please run a ${fromBfi?'BFI':fromEs?'ES':'CHC'} selection first.`);return}
  if(event.data.type!=='KEYSUITE_ADD_SELECTION')return;
  const rawPayload=event.data.payload||{};
  const p={...rawPayload};
  const route=event.data.route||pendingSelectionRoute||'quotation';pendingSelectionRoute='quotation';
+ if(fromBfi||String(p.family||p.product||p.productFamily||'').toUpperCase()==='BFI'){window.KeySuiteBFI?.routeSelection?.(p,route);return}
  if(fromEs||isEsSelectionPayload(p)){void routeEsSelection(p,route).catch(error=>{console.error('ES selection routing failed',error);alert(error?.message||'Unable to route the ES selection.');});return}
  // V4.21.15: never let CHC C4/G1 silently fall back to C6/G2 pricing.
  // Prefer explicit selector identity; if an older cached selector omits it, use the active CHC generation.

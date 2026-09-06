@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17365d">
-  <title>KeySuite V4.19.18</title>
+  <title>KeySuite V4.23.02</title>
   <link rel="manifest" href="manifest.json">
   <style>
     :root{--navy:#17365d;--blue:#2f75b5;--light:#eef3f8;--line:#cbd5e1;--text:#172033;--muted:#64748b;--ok:#15803d}
@@ -574,7 +574,8 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     .chc-rarity-readonly{display:inline-block;min-width:70px;padding:7px 8px;border:1px solid #dbe3ec;border-radius:8px;background:#f8fafc;text-align:center}
     #chcGenerationPriceNote.g1{margin-top:7px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:8px;padding:8px 10px;color:#475569}
 
-  </style>
+  .bfi-price-pair{display:grid;grid-template-columns:minmax(90px,1fr) 110px;gap:6px;align-items:center}.bfi-price-pair input,.bfi-price-pair select{width:100%}.product-model-card-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.product-model-card-head span{font-size:11px;color:var(--muted)}
+</style>
 
 <style id="v41411-chc-generation-style">
 .product-generation-checks{display:flex;gap:10px;flex-wrap:wrap;align-items:center;min-height:38px}
@@ -612,17 +613,17 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 <div id="loadingView" class="loading-screen hidden"><div class="loading-card"><div class="spinner"></div><div id="loadingText">Checking secure access…</div></div></div>
 <div id="appView" class="app hidden">
   <aside>
-    <div class="brand-row"><div class="brand">KeySuite<small>Full Suite V4.19.18</small></div><button id="keyButton" type="button" class="key-button" title="Open Key Dashboard" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l8-8m-2 2l2 2m-5 1l2 2"></path></svg><span>Key</span></button></div>
+    <div class="brand-row"><div class="brand">KeySuite<small>Full Suite V4.23.02</small></div><button id="keyButton" type="button" class="key-button" title="Open Key Dashboard" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l8-8m-2 2l2 2m-5 1l2 2"></path></svg><span>Key</span></button></div>
     <nav>
       <button data-page="dashboard" class="active">Dashboard</button>
       <button data-page="customers">Customers</button>
       <div class="nav-group" data-nav-group="selectorMenu">
         <button type="button" class="nav-toggle" data-nav-toggle="selectorMenu"><span>Selection</span><span class="nav-chevron">⌄</span></button>
-        <div class="nav-submenu"><button data-page="selector" data-generation="G2">CHC C6</button><button data-page="selectorEs">ES</button></div>
+        <div class="nav-submenu"><button data-page="selector" data-generation="G2">CHC C6</button><button data-page="selectorBfi">BFI</button><button data-page="selectorEs">ES</button></div>
       </div>
       <div class="nav-group" data-nav-group="productMenu">
         <button type="button" class="nav-toggle" data-nav-toggle="productMenu"><span>Product</span><span class="nav-chevron">⌄</span></button>
-        <div class="nav-submenu"><div class="v391-brand-tree"><details class="v391-direct-brand-root v391-bgreich-root"><summary>B.G.Reich</summary><div class="v391-bgreich-list"><button data-page="productChc" data-generation="G1">CHC C4</button><button data-page="productChc" data-generation="G2">CHC C6</button><button data-page="productEs">End Suction</button><button data-page="productMotor">Motor</button></div></details></div></div>
+        <div class="nav-submenu"><div class="v391-brand-tree"><details class="v391-direct-brand-root v391-bgreich-root"><summary>B.G.Reich</summary><div class="v391-bgreich-list"><button data-page="productChc" data-generation="G1">CHC C4</button><button data-page="productChc" data-generation="G2">CHC C6</button><button data-page="productBfi">BFI</button><button data-page="productEs">End Suction</button><button data-page="productMotor">Motor</button></div></details></div></div>
       </div>
       <button data-page="keyLab">KeyLab</button>
       <button data-page="quotation">Quotation</button>
@@ -637,7 +638,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
       <button id="settingsButton" type="button" class="settings-button">⚙ Settings</button>
       <button id="logoutButton" type="button">Sign out</button>
     </div>
-    <div class="suite-version">KeySuite V4.19.18</div>
+    <div class="suite-version">KeySuite V4.23.02</div>
   </aside>
 
   <main>
@@ -807,7 +808,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
         <div><label>Supply</label><label id="bareShaftControl" class="default-choice-control"><input id="bareShaft" type="checkbox" data-default-checked="false"> Bare Shaft Pump</label></div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
-        <iframe id="selectorFrame" src="selector/index.html?v=42300" data-src="selector/index.html?v=42300" data-g2-src="selector/index.html?v=42300" data-g1-src="selector-g1/index.html?v=42300" title="KeySelector CHC C6 Series" style="width:100%;height:1900px;border:0;display:block"></iframe>
+        <iframe id="selectorFrame" src="selector/index.html?v=42302" data-src="selector/index.html?v=42302" data-g2-src="selector/index.html?v=42302" data-g1-src="selector-g1/index.html?v=42302" title="KeySelector CHC C6 Series" style="width:100%;height:1900px;border:0;display:block"></iframe>
       </div>
     </section>
 
@@ -816,6 +817,11 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
       <div class="card" style="padding:0;overflow:hidden">
         <iframe id="selectorEsFrame" src="selector-es/index.html?v=41209" data-src="selector-es/index.html?v=41209" title="KeyES End Suction Selector V1.7" style="width:100%;height:2600px;border:0;display:block"></iframe>
       </div>
+    </section>
+
+    <section id="selectorBfi" class="page">
+      <div class="page-title-row"><div><h1>Selector · BFI</h1><div class="muted">BFI horizontal multistage selector. Curve, duty-point selection, technical data, Quote and Assembly follow the same KeySuite workflow as CHC.</div></div><button id="quickSelectionReturnBfi" class="btn secondary quick-selection-return" type="button" hidden title="Return to Quick Selection" aria-label="Return to Quick Selection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l-5 5 5 5"></path><path d="M4 12h10a6 6 0 0 1 6 6"></path></svg></button></div>
+      <div class="card" style="padding:0;overflow:hidden"><iframe id="selectorBfiFrame" src="selector-bfi/index.html?v=42302" data-src="selector-bfi/index.html?v=42302" title="KeySelector BFI" style="width:100%;height:1900px;border:0;display:block"></iframe></div>
     </section>
 
     <section id="productChc" class="page">
@@ -832,7 +838,19 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
         <div class="card"><h2>CHC Series</h2><div id="productSeriesList" class="product-series-list"></div></div>
         <div class="card"><div class="page-title-row" style="margin-bottom:12px"><div><h2 id="productSeriesTitle" style="margin:0">Models</h2><div id="productModelCount" class="muted"></div></div></div><div id="productModelGrid" class="product-model-grid"></div></div>
       </div>
-      <iframe id="productSelectorFrame" src="about:blank" data-src="selector/product.html?product=1&v=42300" data-g2-src="selector/product.html?product=1&v=42300" data-g1-src="selector-g1/product.html?product=1&v=42300" title="CHC Product Curve" style="display:none"></iframe>
+      <iframe id="productSelectorFrame" src="about:blank" data-src="selector/product.html?product=1&v=42302" data-g2-src="selector/product.html?product=1&v=42302" data-g1-src="selector-g1/product.html?product=1&v=42302" title="CHC Product Curve" style="display:none"></iframe>
+    </section>
+
+    <section id="productBfi" class="page">
+      <div class="page-title-row"><div><h1>Product · BFI</h1><div class="muted">B.G.Reich BFI horizontal multistage pump range. Select model, phase, seal and elastomer; open curve or route to Assembly / Quote.</div></div></div>
+      <div class="card product-toolbar" style="grid-template-columns:1.2fr .7fr 1fr .8fr">
+        <div><label>Model Search</label><input id="bfiProductSearch" placeholder="Example: BFI 8-3-1"></div>
+        <div><label>Supply</label><select id="bfiProductPhase"><option value="3Ph" selected>3 Phase</option><option value="1Ph">1 Phase</option></select></div>
+        <div><label>Mechanical Seal</label><select id="bfiProductSeal"><option value="Car/Cer" selected>Carbon / Ceramic</option><option value="SiC/SiC">SiC / SiC</option><option value="TC/TC">TC / TC</option></select></div>
+        <div><label>Elastomer</label><select id="bfiProductElastomer"><option selected>Viton</option><option>EPDM</option><option>NBR</option></select></div>
+      </div>
+      <div class="product-layout"><div class="card"><h2>BFI Series</h2><div id="bfiProductSeriesList" class="product-series-list"></div></div><div class="card"><div class="page-title-row" style="margin-bottom:12px"><div><h2 style="margin:0">BFI Models</h2><div id="bfiProductModelCount" class="muted"></div></div></div><div id="bfiProductModelGrid" class="product-model-grid"></div></div></div>
+      <iframe id="productBfiSelectorFrame" src="about:blank" data-src="selector-bfi/product.html?product=1&amp;v=42302" title="BFI Product Curve" style="display:none"></iframe>
     </section>
 
     <section id="productGws" class="page">
@@ -1253,6 +1271,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
                   <div class="category-product-buttons" aria-label="Product pricing rules">
                   <button class="category-product-button" type="button" data-category-product="CHC_G1">CHC G1</button>
                   <button class="category-product-button active" type="button" data-category-product="CHC_G2">CHC G2</button>
+                  <button class="category-product-button" type="button" data-category-product="BFI">BFI</button>
                   <button class="category-product-button" type="button" data-category-product="ES">ES</button>
                   <button class="category-product-button" type="button" data-category-product="GWS">GWS</button>
                   <button class="category-product-button" type="button" data-category-product="KEYPLC">KeyPLC</button>
@@ -1344,6 +1363,9 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
           <span class="module-order">OPEN PRICE LIST</span>
         </button>
 
+        <button type="button" class="key-module-card" data-go="bfiPriceList">
+          <span class="module-icon">BFI</span><h2>BFI</h2><p>Maintain BFI 1 Phase / 3 Phase source prices and rarity by currency.</p><span class="module-order">OPEN PRICE LIST</span>
+        </button>
         <button type="button" class="key-module-card" data-go="esPriceList">
           <span class="module-icon">ES</span><h2>End Suction</h2><p>Maintain B.G.Reich ES source prices by material construction.</p><span class="module-order">OPEN PRICE LIST</span>
         </button>
@@ -1495,6 +1517,19 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
           </table>
         </div>
       </div>
+    </section>
+
+
+    <section id="bfiPriceList" class="page">
+      <div class="key-back-row"><button class="btn secondary" type="button" data-go="priceListDashboard">← Price List</button></div>
+      <div class="page-title-row"><div><h1>BFI Price List</h1><div class="muted">Maintain independent MYR, USD and RMB BFI source prices for 1 Phase and 3 Phase models. Uploaded V1.0 source values start at 0.00.</div></div></div>
+      <div class="card"><div class="pricelist-settings">
+        <div class="pricelist-currency-setting"><label>Currency Selection</label><select id="bfiPriceCurrency"><option value="MYR">MYR</option><option value="USD">USD</option><option value="RMB">RMB</option></select></div>
+        <div><label>USD → MYR</label><input id="bfiUsdMultiplier" type="number" min="0.0001" step="0.0001" value="1"><div class="actions" style="margin-top:6px"><button id="saveBfiUsdMultiplier" class="btn" type="button">Save USD Rate</button></div></div>
+        <div><label>RMB → MYR</label><input id="bfiRmbMultiplier" type="number" min="0.0001" step="0.0001" value="1"><div class="actions" style="margin-top:6px"><button id="saveBfiRmbMultiplier" class="btn" type="button">Save RMB Rate</button></div></div>
+      </div><div class="pricelist-note" style="margin-top:12px">BFI uses its own Category Pricing Rule and currency selection. Zero values are kept as unpriced source values and are not quotable.</div></div>
+      <div class="card" style="margin-top:16px"><div class="page-title-row" style="margin-bottom:12px"><div><h2 style="margin:0">BFI Models</h2><div id="bfiPriceListCount" class="muted"></div></div><div class="price-list-search"><label>Search Model</label><input id="bfiPriceSearch" placeholder="Example: BFI 12-5"></div></div>
+      <div class="table-wrap" style="max-height:680px"><table class="pricelist-table"><thead><tr><th>Model</th><th>1 Phase · Price / Rarity</th><th>3 Phase · Price / Rarity</th><th></th></tr></thead><tbody id="bfiPriceRows"></tbody></table></div></div>
     </section>
 
 
@@ -1679,6 +1714,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
           <div class="pricing-family-tabs" id="pricingFamilyTabs" role="tablist" aria-label="Product pricing rule">
             <button class="pricing-family-tab" type="button" role="tab" aria-selected="false" data-pricing-family="CHC_G1">CHC G1</button>
             <button class="pricing-family-tab active" type="button" role="tab" aria-selected="true" data-pricing-family="CHC_G2">CHC G2</button>
+            <button class="pricing-family-tab" type="button" role="tab" aria-selected="false" data-pricing-family="BFI">BFI</button>
             <button class="pricing-family-tab" type="button" role="tab" aria-selected="false" data-pricing-family="ES">ES</button>
             <button class="pricing-family-tab" type="button" role="tab" aria-selected="false" data-pricing-family="GWS">GWS</button>
             <button class="pricing-family-tab" type="button" role="tab" aria-selected="false" data-pricing-family="KEYPLC">KeyPLC</button>
@@ -1914,19 +1950,22 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="permissions.js?v=41707"></script>
-<script src="v40407-role-authority.js?v=42300"></script>
+<script src="v40407-role-authority.js?v=42302"></script>
 <script src="applications.js?v=409"></script>
 <script src="assembly.js?v=41913"></script>
-<script src="app.js?v=42300"></script>
-<script src="pricing.js?v=41700"></script>
+<script src="bfi-data-v42302.js?v=42302"></script>
+<script src="app.js?v=42302"></script>
+<script src="pricing.js?v=42302"></script>
 <script src="quotation-references.js?v=409"></script>
 <script src="categories.js?v=41700"></script>
-<script src="chc-g1-price-map-v41409.js?v=42300"></script>
+<script src="chc-g1-price-map-v41409.js?v=42302"></script>
 <script src="pricelist.js?v=414122"></script>
 <script src="chc-g1-product-data-v41411.js?v=42115"></script>
-<script src="product.js?v=42300"></script>
+<script src="product.js?v=42302"></script>
+<script src="bfi-v42302.js?v=42302"></script>
+<script>document.getElementById('closeBfiCurve')?.addEventListener('click',()=>document.getElementById('bfiCurveDialog')?.close());</script>
 <script src="manifold.js?v=41412"></script>
-<script src="roles.js?v=42300"></script>
+<script src="roles.js?v=42302"></script>
 <script src="motor.js?v=409"></script>
 <script src="coupling.js?v=409"></script>
 <script src="baseplate.js?v=409"></script>
@@ -1976,6 +2015,13 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 
 <dialog id="assemblyDescriptionDialog" class="ks-dialog"><form method="dialog" class="dialog-body assembly-description-dialog"><div class="page-title-row"><h2>System Description</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div><textarea id="assemblyDescriptionPopup"></textarea><div class="dialog-actions"><button class="btn secondary" value="cancel">Cancel</button><button class="btn" id="saveAssemblyDescriptionPopup" value="default">Save</button></div></form></dialog>
 
+
+<dialog id="bfiCurveDialog" class="dialog product-curve-dialog">
+  <div class="dialog-body product-curve-selector-shell">
+    <div class="product-curve-selector-head"><strong id="bfiCurveTitle">BFI Curve</strong><button class="btn secondary" type="button" id="closeBfiCurve">Close</button></div>
+    <div id="bfiCurveHost"></div>
+  </div>
+</dialog>
 <dialog id="productCurveDialog" class="ks-dialog product-curve-dialog">
   <div class="dialog-body product-curve-selector-shell">
     <div class="product-curve-selector-head"><strong id="productCurveTitle">CHC Curve</strong><button class="btn secondary" type="button" id="closeProductCurve">Close</button></div>
@@ -1985,7 +2031,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 <script src="company-settings.js?v=41707"></script>
 <script src="keyai.js?v=41300"></script>
 <script src="keylab.js?v=41406"></script>
-<script src="auth.js?v=41701"></script>
+<script src="auth.js?v=42302"></script>
 <script src="v388-dashboard-keycore.js?v=409"></script>
 <script src="universe.js?v=41202"></script>
 <script src="v41223-selection-recovery.js?v=41300"></script>
@@ -2001,7 +2047,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     try{sessionStorage.setItem(STORAGE_KEY,generation)}catch(_){}
     const frame=document.getElementById('selectorFrame');
     if(frame){
-      const wanted=generation==='G1'?(frame.dataset.g1Src||'selector-g1/index.html?v=42300'):(frame.dataset.g2Src||frame.dataset.src||'selector/index.html?v=42300');
+      const wanted=generation==='G1'?(frame.dataset.g1Src||'selector-g1/index.html?v=42302'):(frame.dataset.g2Src||frame.dataset.src||'selector/index.html?v=42302');
       const current=String(frame.getAttribute('src')||'');
       const expectedPath=generation==='G1'?'selector-g1/index.html':'selector/index.html';
       if(!current.includes(expectedPath))frame.setAttribute('src',wanted);
@@ -2013,7 +2059,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     if(hint)hint.textContent=`Select a CHC ${generation==='G1'?'C4':'C6'} pumpset, then use Assembly or Quote in the result panel.`;
     return generation;
   }
-  window.KeySuiteCHCSelection={version:'4.23.01',setGeneration,getGeneration:()=>generation};
+  window.KeySuiteCHCSelection={version:'4.23.02',setGeneration,getGeneration:()=>generation};
   document.addEventListener('click',event=>{
     const button=event.target.closest('button[data-page="selector"][data-generation]');
     if(button)setGeneration(button.dataset.generation);
@@ -2022,7 +2068,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
   else setGeneration(generation);
 })();
 </script>
-<script src="v41200-bootstrap.js?v=42300"></script>
+<script src="v41200-bootstrap.js?v=42302"></script>
 
 <script id="v41412-static-product-generation">
 document.addEventListener('click',event=>{

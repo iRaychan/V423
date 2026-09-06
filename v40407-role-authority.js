@@ -5,8 +5,8 @@
   window.__KEYSUITE_V40407_ROLE_AUTHORITY__=true;
 
   const VERSION='4.22.03';
-  const FAMILIES=['CHC','ES'];
-  const PRODUCT_PAGE_FAMILY={productChc:'CHC',productEs:'ES'};
+  const FAMILIES=['CHC','BFI','ES'];
+  const PRODUCT_PAGE_FAMILY={productChc:'CHC',productBfi:'BFI',productEs:'ES'};
   // V4.17.02: Product → Keylargo is an Owner-assigned role scope.
   const KEYLARGO_PRODUCT_PAGE_FAMILY={
     productBaseplate:'BASEPLATE',
@@ -18,7 +18,7 @@
   const HOUSE_PRODUCT_PAGES=new Set(['keyLab']);
   const MOTOR_PRODUCT_PAGES=new Set(['productMotor']);
   const OTHER_PRODUCT_PAGES=new Set([]);
-  const SELECTOR_PAGE_FAMILY={selector:'CHC',selectorEs:'ES'};
+  const SELECTOR_PAGE_FAMILY={selector:'CHC',selectorBfi:'BFI',selectorEs:'ES'};
   const state={access:null,scope:{keys:[]},loaded:false,loadError:''};
   const norm=v=>String(v??'').trim();
   const upper=v=>norm(v).toUpperCase();
@@ -29,6 +29,7 @@
   const familyOf=value=>{
     const group=normalizeProductGroup(value);
     if(group==='CHC'||group==='CHC_G1'||group==='CHC_G2')return 'CHC';
+    if(group==='BFI')return 'BFI';
     if(group==='ES')return 'ES';
     return '';
   };
