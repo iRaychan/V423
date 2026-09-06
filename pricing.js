@@ -288,15 +288,42 @@
   }
 
 
+  function normalizeBfiPriceIdentity(model,phase=''){
+    const raw=String(model||'').trim(),suffix=/E$/i.test(raw)?'E':(/T$/i.test(raw)?'T':'');
+    const base=suffix?raw.slice(0,-1).trim():raw;
+    const requested=suffix==='E'||suffix==='T'?'3Ph':(String(phase||'').trim()||'3Ph');
+    return {raw,base,suffix,phase:requested==='1Ph'?'1Ph':'3Ph'};
+  }
+  function bfiPriceStatus(model,phase='3Ph',options={}){
+    const customer=options.customer||quotationCustomer(),cat=options.category||categoryForCustomer(customer),identity=normalizeBfiPriceIdentity(model,phase);
+    if(!customer)return {ok:false,reason:'NO_CUSTOMER',identity};
+    if(!cat)return {ok:false,reason:'NO_CATEGORY',identity,customer};
+    const wanted=identity.base.toLowerCase(),catalogue=(secureData.bfiProducts&&secureData.bfiProducts.length)?secureData.bfiProducts:(window.KeySuiteBFIProductData?.models||[]);
+    const product=catalogue.find(p=>String(p.id||'').toLowerCase()===String(identity.raw||'').toLowerCase()||String(p.id||'').toLowerCase()===wanted||String(p.model||'').toLowerCase()===wanted);
+    if(!product)return {ok:false,reason:'MODEL_NOT_FOUND',identity,customer,category:cat};
+    const available=Array.isArray(product.phases)&&product.phases.length?product.phases:['1Ph','3Ph'],variant=available.includes(identity.phase)?identity.phase:(available.includes('3Ph')?'3Ph':available[0]);
+    const allCandidates=currencyCandidates(product.pricesByCurrency||{},product.rarityByCurrency||{},variant,'BFI');
+    if(!allCandidates.length)return {ok:false,reason:'NO_SOURCE_PRICE',identity,product,variant,customer,category:cat,allCandidates:[],allowedCurrencies:[]};
+    const rule=categoryRule(cat,'BFI'),allowedCurrencies=[...new Set(rule.currencies||[])],allowed=new Set(allowedCurrencies),fixedCandidates=String(options.rarity||'').toLowerCase()==='fixed'?allCandidates:allCandidates.filter(row=>row.rarity==='fixed'),allowedCandidates=fixedCandidates.length?fixedCandidates:allCandidates.filter(row=>allowed.has(row.currency));
+    if(!fixedCandidates.length&&(!allowed.size||!allowedCandidates.length))return {ok:false,reason:'CURRENCY_NOT_ENABLED',identity,product,variant,customer,category:cat,allCandidates,allowedCurrencies,allowedCandidates};
+    return {ok:true,reason:'OK',identity,product,variant,customer,category:cat,allCandidates,allowedCurrencies,allowedCandidates,fixedCandidates};
+  }
+  function bfiPriceProblem(model,phase='3Ph',options={}){
+    const status=bfiPriceStatus(model,phase,options);if(status.ok)return '';
+    const label=status.product?.model||status.identity?.base||String(model||'BFI'),variant=status.variant||status.identity?.phase||phase;
+    if(status.reason==='NO_SOURCE_PRICE')return `No positive BFI source price is entered for ${label} (${variant}). Enter MYR, USD or RMB under Key → Price List → BFI.`;
+    if(status.reason==='CURRENCY_NOT_ENABLED'){
+      const priced=(status.allCandidates||[]).map(row=>row.currency).join(', ')||'none',enabled=(status.allowedCurrencies||[]).join(', ')||'none';
+      return `BFI source price exists for ${label} (${variant}) in: ${priced}. This customer's BFI Category Pricing currently enables: ${enabled}. Enable at least one priced currency under Key → Category Pricing → BFI.`;
+    }
+    if(status.reason==='NO_CATEGORY')return 'This customer has no Pricing Category assigned for BFI pricing.';
+    if(status.reason==='MODEL_NOT_FOUND')return `BFI price model could not be matched for ${String(model||'')}.`;
+    return 'BFI pricing is unavailable for the selected customer.';
+  }
   function findBfiPrice(model,phase='3Ph',options={}){
-    const customer=options.customer||quotationCustomer(),cat=options.category||categoryForCustomer(customer);if(!customer||!cat)return null;
-    const wanted=String(model||'').trim().toLowerCase();
-    const catalogue=(secureData.bfiProducts&&secureData.bfiProducts.length)?secureData.bfiProducts:(window.KeySuiteBFIProductData?.models||[]);
-    const product=catalogue.find(p=>String(p.id||'').toLowerCase()===wanted||String(p.model||'').toLowerCase()===wanted);if(!product)return null;
-    const available=Array.isArray(product.phases)&&product.phases.length?product.phases:['1Ph','3Ph'];
-    const variant=available.includes(phase)?phase:(available.includes('3Ph')?'3Ph':available[0]);
-    const calc=calculatePrice(product.pricesByCurrency||{},variant,cat,'BFI',{...options,customer,rarityBook:product.rarityByCurrency||{}});
-    return calc?{product,material:variant,variant,rarity:calc.rarity,calc,category:cat,customer,family:'BFI',sourceExtra:{motor_phase:variant}}:null;
+    const status=bfiPriceStatus(model,phase,options);if(!status.ok)return null;
+    const {product,variant,customer,category:cat}=status,calc=calculatePrice(product.pricesByCurrency||{},variant,cat,'BFI',{...options,customer,rarityBook:product.rarityByCurrency||{}});
+    return calc?{product,material:variant,variant,rarity:calc.rarity,calc,category:cat,customer,family:'BFI',sourceExtra:{motor_phase:variant,bfi_identity_suffix:status.identity?.suffix||''}}:null;
   }
 
   function findGwsPrice(model,pressure,options={}){
@@ -567,5 +594,5 @@ ${indent}Wiring for pumps & pressure transmitter within pump skid @ 1 Lot`;
     const row=window.KeySuiteApp?.addExternalQuoteItem?.(item);if(row)showPage('quotation');
   }
 
-  window.KeySuitePricing={init,calculate,calculatePrice,calculateManual,companyFactors,formula,quoteBlockReason,pricingSourceBlockReason,pricingSourceMarginBlockReason,ensureQuoteableCalculation,sourceSnapshot,repriceSource,priceAssemblyForQuotation,findPrice,findBfiPrice,findGwsPrice,findAutoGwsTank,findKeyplcPrice,applyPriceToQuoteRow,refreshQuotePrices,addGwsToQuotation,addEs,esDescription,addKeyplc,keyplcDescription,keyplcTitle,normalizePanelType,findEsPrice,findBaseplatePrice,buildChcAssemblyItem,buildGwsAssemblyItem,chcSealAddon,chcSealDescription,normalizeChcSealFaces,selectCustomer,refreshCustomers,hasPricingContext,syncPriceListSettings,render:()=>{renderSummary();renderTable()}};
+  window.KeySuitePricing={init,calculate,calculatePrice,calculateManual,companyFactors,formula,quoteBlockReason,pricingSourceBlockReason,pricingSourceMarginBlockReason,ensureQuoteableCalculation,sourceSnapshot,repriceSource,priceAssemblyForQuotation,findPrice,findBfiPrice,bfiPriceStatus,bfiPriceProblem,findGwsPrice,findAutoGwsTank,findKeyplcPrice,applyPriceToQuoteRow,refreshQuotePrices,addGwsToQuotation,addEs,esDescription,addKeyplc,keyplcDescription,keyplcTitle,normalizePanelType,findEsPrice,findBaseplatePrice,buildChcAssemblyItem,buildGwsAssemblyItem,chcSealAddon,chcSealDescription,normalizeChcSealFaces,selectCustomer,refreshCustomers,hasPricingContext,syncPriceListSettings,render:()=>{renderSummary();renderTable()}};
 })();
