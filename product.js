@@ -43,7 +43,7 @@
   function captureCurveReturnState(){return null}
   function restoreCurveReturnState(){return false}
 
-  function ensureFrame(){const frame=$('productSelectorFrame');if(!frame)return frame;const wanted=selectedChcGeneration==='G1'?(frame.dataset.g1Src||'selector-g1/product.html?product=1&v=42308'):(frame.dataset.g2Src||frame.dataset.src||'selector/product.html?product=1&v=42308');const current=frame.getAttribute('src')||'about:blank';if(current==='about:blank'||(!current.includes(wanted.split('?')[0]))){frameReady=false;queued=null;frame.src=wanted}return frame}
+  function ensureFrame(){const frame=$('productSelectorFrame');if(!frame)return frame;const wanted=selectedChcGeneration==='G1'?(frame.dataset.g1Src||'selector-g1/product.html?product=1&v=42309'):(frame.dataset.g2Src||frame.dataset.src||'selector/product.html?product=1&v=42309');const current=frame.getAttribute('src')||'about:blank';if(current==='about:blank'||(!current.includes(wanted.split('?')[0]))){frameReady=false;queued=null;frame.src=wanted}return frame}
   function options(){return {material:$('productMaterial')?.value||'SS304 (Cast Iron Connection)',seal:$('productSeal')?.value||'Car/Cer',elastomer:$('productElastomer')?.value||'Viton',connection:$('productConnection')?.value||'round',bare:!!$('productBareShaft')?.checked,hz:50}}
   function postToFrame(frame,message){try{frame.contentWindow.postMessage(message,'*')}catch(error){console.error('Unable to contact CHC product frame.',error)}}
   function send(model,action){

@@ -14,7 +14,7 @@
   if(window.top!==window.self||window.__KEYSUITE_V40001_PRODUCT_SERIES_OVERHAUL__)return;
   window.__KEYSUITE_V40001_PRODUCT_SERIES_OVERHAUL__=true;
 
-  const VERSION='4.23.08';
+  const VERSION='4.23.09';
   const $=id=>document.getElementById(id);
   const norm=v=>String(v??'').trim();
   const low=v=>norm(v).toLowerCase();
