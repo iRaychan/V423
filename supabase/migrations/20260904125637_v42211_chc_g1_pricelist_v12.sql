@@ -6,6 +6,7 @@
 -- The price workbook is not a hydraulic/dimension source; technical C4 curve data remains unchanged.
 -- Safe to rerun.
 begin;
+
 do $$
 begin
   if to_regclass('public.ks_products_chc_g1') is null then
@@ -13,8 +14,10 @@ begin
   end if;
 end
 $$;
+
 alter table public.ks_products_chc_g1
   alter column source_workbook set default '010 - CHC G1 (Pricelist) - 260903 - V1.2.xlsx';
+
 create temp table ks_v42211_g1_price_models(
   source_row integer primary key,
   model text unique not null,
@@ -22,6 +25,7 @@ create temp table ks_v42211_g1_price_models(
   chcs_myr numeric,
   chcn_myr numeric
 ) on commit drop;
+
 insert into ks_v42211_g1_price_models(source_row,model,chc_myr,chcs_myr,chcn_myr) values
 (5,'CHC 1-1',0,0,0),
 (6,'CHC 1-2',0,0,0),
@@ -435,6 +439,7 @@ insert into ks_v42211_g1_price_models(source_row,model,chc_myr,chcs_myr,chcn_myr
 (414,'CHC 200-4-2',0,0,0),
 (415,'CHC 200-4-1',0,0,0),
 (416,'CHC 200-4',0,0,0);
+
 -- Synchronize the independent editable C4/G1 price catalogue.
 -- Only model/source metadata is updated on conflict; all entered prices and rarity values are preserved.
 insert into public.ks_products_chc_g1(id,model,source_row,source_workbook)
@@ -444,6 +449,7 @@ on conflict (model) do update set
   source_row=excluded.source_row,
   source_workbook=excluded.source_workbook,
   updated_at=now();
+
 -- Keep the supplied workbook as exact audit data where that legacy audit table exists.
 do $$
 begin
@@ -469,6 +475,7 @@ begin
   end if;
 end
 $$;
+
 -- Retain the explicit prior removal of the obsolete standalone 60 Hz row.
 delete from public.ks_products_chc_g1 where model='CHC 5-5 (60Hz)';
 do $$
@@ -479,4 +486,5 @@ begin
   end if;
 end
 $$;
+
 commit;

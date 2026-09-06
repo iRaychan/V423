@@ -1598,34 +1598,23 @@ alternatives.innerHTML='';
   let idx=0,max=-Infinity;(curve.efficiency||[]).forEach((v,i)=>{if(Number(v)>max){max=Number(v);idx=i}});
   const seriesFlow=Number((String(model.model).match(/^CHC\s+(\d+)/i)||[])[1]||0);
   let q=seriesFlow>0?seriesFlow:Number(curve.flow?.[idx]??curve.flow?.[Math.floor((curve.flow?.length||1)/2)]??0);if(!(q>0))q=Math.max(.1,Number(curve.flow?.find(v=>Number(v)>0)||.1));
-  let evaluated=evaluateModel(model,q,0,50);if(!evaluated){q=(Number(curve.flow?.[0]||0)+Number(curve.flow?.[curve.flow.length-1]||1))/2;evaluated=evaluateModel(model,q,0,50)}if(!evaluated)return null;
-  const h=evaluated.predHead;
-  selectionState={q,h,hz:50,selectionHz:50,curveHz:50,rawFlow:q,rawHead:h,flowUnit:'m3h',headUnit:'m',motorEffClass:'IE3',motorPhase:'3Ph',motorVoltage:415,models:[evaluated],selectedIndex:0,productMode:true,enhanced:false};
+  const enhanced=opts.enhanced===true||new URLSearchParams(location.search).get('enhanced')==='1';
+  let evaluated=enhanced?evaluateEnhancedModel(model,q,0):evaluateModel(model,q,0,50);if(!evaluated){q=(Number(curve.flow?.[0]||0)+Number(curve.flow?.[curve.flow.length-1]||1))/2;evaluated=enhanced?evaluateEnhancedModel(model,q,0):evaluateModel(model,q,0,50)}if(!evaluated)return null;
+  const h=Math.max(1,Math.floor(Number(evaluated.predHead)||0)),selectedEval=(enhanced?evaluateEnhancedModel(model,q,h):evaluateModel(model,q,h,50))||evaluated,hz=enhanced?KEYSUITE_ENHANCED_MAX_HZ:50;
+  selectionState={q,h,hz,selectionHz:hz,curveHz:hz,rawFlow:q,rawHead:h,rawFlowText:String(q),rawHeadText:String(h),flowUnit:'m3h',headUnit:'m',motorEffClass:'IE3',motorPhase:'3Ph',motorVoltage:415,models:[selectedEval],selectedIndex:0,productMode:true,enhanced};
   window.keysuiteExportPayload={quotation_model:model.model,keysuite_material:opts.material||'SS304 (Cast Iron Connection)',keysuite_seal:opts.seal||'Car/Cer',keysuite_elastomer:opts.elastomer||'Viton',keysuite_connection_type:opts.connection||'round',keysuite_bare_shaft:!!opts.bare,product_mode:true};
   syncControlsFromState();renderAlternatives();renderSelected();const payload=currentSelection();window.parent?.postMessage({type:'KEYSUITE_PRODUCT_CURVE_STATE',family:'CHC',model:model.model,flowM3h:q,headM:h,valid:true,message:'Curve loaded. Enter Flow + Head to set a duty point.'},'*');return payload;
  }
  function applyProductDuty(flowM3h,headM,meta={}){
   const modelName=String(productModelName||window.keysuiteExportPayload?.quotation_model||selectionState.models?.[selectionState.selectedIndex||0]?.model||'');
   const model=DB.models.find(m=>String(m.model).toLowerCase()===modelName.toLowerCase());
-  const q=Number(flowM3h),h=Number(headM),hz=Math.max(.1,Math.min(50,Number(meta.hz||hzHidden?.value||selectionState.curveHz||selectionState.hz||50)));
+  const q=Number(flowM3h),h=Number(headM),enhanced=meta.enhanced!==undefined?!!meta.enhanced:!!enhancedMode?.checked,hz=enhanced?KEYSUITE_ENHANCED_MAX_HZ:Math.max(.1,Math.min(50,Number(meta.hz||hzHidden?.value||selectionState.curveHz||selectionState.hz||50)));
   if(!model||!(q>0&&h>0))return null;
-  const evaluated=evaluateModel(model,q,h,hz);
+  const evaluated=enhanced?evaluateEnhancedModel(model,q,h):evaluateModel(model,q,h,hz);
   const rawFlow=meta.rawFlow!=null?Number(meta.rawFlow):q,rawHead=meta.rawHead!=null?Number(meta.rawHead):h,rawFlowText=meta.rawFlowText!=null?String(meta.rawFlowText):String(rawFlow),rawHeadText=meta.rawHeadText!=null?String(meta.rawHeadText):String(rawHead);
   const flowUnit=meta.flowUnit||'m3h',headUnit=meta.headUnit||'m';
-  if(!evaluated){
-    selectionState={...selectionState,q,h,hz,selectionHz:hz,curveHz:hz,rawFlow,rawHead,rawFlowText,rawHeadText,flowUnit,headUnit,productMode:true};
-    syncControlsFromState();
-    out.innerHTML=`<div class="warning">${model.model} cannot be evaluated at ${q.toFixed(1)} m³/h. The flow is outside this model's curve range.</div>`;
-    alternatives.innerHTML='';
-    window.parent?.postMessage({type:'KEYSUITE_PRODUCT_CURVE_STATE',family:'CHC',model:model.model,flowM3h:q,headM:h,valid:false,message:'Flow is outside this CHC model curve range.'},'*');
-    return null;
-  }
-  productModelName=model.model;
-  selectionState={q,h,hz,selectionHz:hz,curveHz:hz,rawFlow,rawHead,rawFlowText,rawHeadText,flowUnit,headUnit,motorEffClass:motorEff.value||'IE3',motorPhase:motorPhase.value||'3Ph',motorVoltage:Number(motorVoltage.value||415),models:[evaluated],selectedIndex:0,productMode:true,enhanced:false};
-  syncControlsFromState();renderAlternatives();renderSelected();
-  const payload=currentSelection();
-  window.parent?.postMessage({type:'KEYSUITE_PRODUCT_CURVE_STATE',family:'CHC',model:model.model,flowM3h:q,headM:h,valid:true,message:evaluated.margin>=0?'Duty point updated.':'Duty point is above the pump curve; curve retained for reference.'},'*');
-  return payload;
+  if(!evaluated){selectionState={...selectionState,q,h,hz,selectionHz:hz,curveHz:hz,rawFlow,rawHead,rawFlowText,rawHeadText,flowUnit,headUnit,productMode:true,enhanced};syncControlsFromState();out.innerHTML=`<div class="warning">${model.model} cannot be evaluated at ${q.toFixed(1)} m³/h${enhanced?' on the Enhanced Curve':''}. The flow is outside this model's curve range.</div>`;alternatives.innerHTML='';window.parent?.postMessage({type:'KEYSUITE_PRODUCT_CURVE_STATE',family:'CHC',model:model.model,flowM3h:q,headM:h,valid:false,message:'Flow is outside this CHC model curve range.'},'*');return null}
+  productModelName=model.model;selectionState={q,h,hz,selectionHz:hz,curveHz:hz,rawFlow,rawHead,rawFlowText,rawHeadText,flowUnit,headUnit,motorEffClass:motorEff.value||'IE3',motorPhase:motorPhase.value||'3Ph',motorVoltage:Number(motorVoltage.value||415),models:[evaluated],selectedIndex:0,productMode:true,enhanced};syncControlsFromState();renderAlternatives();renderSelected();const payload=currentSelection();window.parent?.postMessage({type:'KEYSUITE_PRODUCT_CURVE_STATE',family:'CHC',model:model.model,flowM3h:q,headM:h,valid:true,message:evaluated.margin>=0?'Duty point updated.':'Duty point is above the pump curve; curve retained for reference.'},'*');return payload;
  }
  function applyProductDutyFromInputs(){
   const rawFlowText=String(flowInput.value??'').trim(),rawHeadText=String(headInput.value??'').trim(),rawFlow=Number(rawFlowText),rawHead=Number(rawHeadText),flowUnit=flowUnitInput.value,headUnit=headUnitInput.value;
@@ -1637,6 +1626,7 @@ alternatives.innerHTML='';
   go.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();applyProductDutyFromInputs()},true);
   [flowInput,headInput].forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();event.stopImmediatePropagation();applyProductDutyFromInputs()}},true));
  }
+ if(productFrame&&enhancedMode){enhancedMode.addEventListener('change',event=>{event.stopImmediatePropagation();const on=!!enhancedMode.checked;if(!on){const u=new URL('product.html',location.href);u.searchParams.set('product','1');u.searchParams.set('v','42307');location.replace(u.href);return}updateEnhancedModeUI();speedUnit.value='hz';speedInput.value=String(KEYSUITE_ENHANCED_MAX_HZ);hzHidden.value=String(KEYSUITE_ENHANCED_MAX_HZ);applyProductDuty(selectionState.q,selectionState.h,{rawFlow:selectionState.rawFlow,rawHead:selectionState.rawHead,rawFlowText:selectionState.rawFlowText,rawHeadText:selectionState.rawHeadText,flowUnit:selectionState.flowUnit||'m3h',headUnit:selectionState.headUnit||'m',enhanced:true,hz:KEYSUITE_ENHANCED_MAX_HZ})},true)}
  function keychcPoleFromRpm(rpm){rpm=Number(rpm)||0;return rpm>=2400?2:rpm>=1200?4:rpm>=800?6:8}
  function keychcDashboardAlternatives(){
   const enhanced=!!selectionState.enhanced;
@@ -1647,7 +1637,7 @@ alternatives.innerHTML='';
    if(!selectionState?.models?.length)return null;
    const base=selectionState.models[selectionState.selectedIndex||0];const b=keychcCurrentDisplayModel()||base;const ks=liveOptions(),enhanced=!!selectionState.enhanced;
    const displayRpm=enhanced?KEYSUITE_ENHANCED_MAX_RPM:b.rpm,displayHz=enhanced?KEYSUITE_ENHANCED_MAX_HZ:Number(selectionState.curveHz||selectionState.hz||50);
-   return {source:'KeyCHC-v3.4.7-KeySuite-V3.8.9',family:'CHC',generation_code:'G2',keysuite_generation_code:'G2',keysuite_product_group_code:'CHC_G2',keysuite_price_group_code:'CHC_G2',model:b.model,base_model:b.model,display_model:keychcVisibleModelName(b.model,enhanced),series:b.series,stages:b.stages,connection:b.connection,motor_kw:b.motor_kw,motor_hp:b.motor_hp,shaft_kw:b.shaft,efficiency:b.eff,npshr:b.npsh,speed_rpm:displayRpm,pole:enhanced?2:keychcPoleFromRpm(b.rpm),frequency_hz:displayHz,operating_speed_rpm:enhanced?Number(b.operatingRpm||0):b.rpm,operating_frequency_hz:enhanced?Number(b.operatingHz||0):displayHz,max_speed_rpm:enhanced?KEYSUITE_ENHANCED_MAX_RPM:undefined,max_frequency_hz:enhanced?KEYSUITE_ENHANCED_MAX_HZ:undefined,enhanced,enhanced_curve:enhanced,flow_m3h:selectionState.q,head_m:selectionState.h,raw_flow:selectionState.rawFlow,raw_head:selectionState.rawHead,raw_flow_text:selectionState.rawFlowText,raw_head_text:selectionState.rawHeadText,flow_unit:selectionState.flowUnit,head_unit:selectionState.headUnit,motor_efficiency_class:motorEff.value,motor_phase:motorPhase.value,motor_voltage:Number(motorVoltage.value),product_mode:!!selectionState.productMode,keysuite_material:ks.keysuite_material,keysuite_seal:ks.keysuite_seal,keysuite_elastomer:ks.keysuite_elastomer,keysuite_connection_type:ks.keysuite_connection_type,keysuite_bare_shaft:ks.keysuite_bare_shaft,keysuite_supply_mode:ks.keysuite_bare_shaft?'BARE':'COMPLETE',export_state:{...selectionState,enhanced,motorEffClass:motorEff.value,motorPhase:motorPhase.value,motorVoltage:Number(motorVoltage.value),models:[base],selectedIndex:0}};
+   return {source:'KeyCHC-v3.4.7-KeySuite-V4.23.07',family:'CHC',generation_code:'G2',keysuite_generation_code:'G2',keysuite_product_group_code:'CHC_G2',keysuite_price_group_code:'CHC_G2',model:b.model,base_model:b.model,display_model:keychcVisibleModelName(b.model,enhanced),series:b.series,stages:b.stages,connection:b.connection,motor_kw:b.motor_kw,motor_hp:b.motor_hp,shaft_kw:b.shaft,efficiency:b.eff,npshr:b.npsh,speed_rpm:displayRpm,pole:enhanced?2:keychcPoleFromRpm(b.rpm),frequency_hz:displayHz,operating_speed_rpm:enhanced?Number(b.operatingRpm||0):b.rpm,operating_frequency_hz:enhanced?Number(b.operatingHz||0):displayHz,max_speed_rpm:enhanced?KEYSUITE_ENHANCED_MAX_RPM:undefined,max_frequency_hz:enhanced?KEYSUITE_ENHANCED_MAX_HZ:undefined,enhanced,enhanced_curve:enhanced,flow_m3h:selectionState.q,head_m:selectionState.h,raw_flow:selectionState.rawFlow,raw_head:selectionState.rawHead,raw_flow_text:selectionState.rawFlowText,raw_head_text:selectionState.rawHeadText,flow_unit:selectionState.flowUnit,head_unit:selectionState.headUnit,motor_efficiency_class:motorEff.value,motor_phase:motorPhase.value,motor_voltage:Number(motorVoltage.value),product_mode:!!selectionState.productMode,keysuite_material:ks.keysuite_material,keysuite_seal:ks.keysuite_seal,keysuite_elastomer:ks.keysuite_elastomer,keysuite_connection_type:ks.keysuite_connection_type,keysuite_bare_shaft:ks.keysuite_bare_shaft,keysuite_supply_mode:ks.keysuite_bare_shaft?'BARE':'COMPLETE',export_state:{...selectionState,enhanced,motorEffClass:motorEff.value,motorPhase:motorPhase.value,motorVoltage:Number(motorVoltage.value),models:[base],selectedIndex:0}};
   }catch(e){console.warn('KeySuite CHC payload error',e);return null}
  }
  window.__KEYSUITE_CURRENT_SELECTION=currentSelection;

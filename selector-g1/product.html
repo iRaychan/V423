@@ -1787,7 +1787,7 @@ alternatives.innerHTML='';
   q=productAuto1(q);
   selectionState.productImpellerConfig=null;keychcInitProductImpellerConfig(model);
   let configured=keychcProductConfiguredModel(model),evaluated=evaluateModel(configured,q,0,50);if(!evaluated){q=productAuto1((Number(curve.flow?.[0]||0)+Number(curve.flow?.[curve.flow.length-1]||1))/2);configured=keychcProductConfiguredModel(model);evaluated=evaluateModel(configured,q,0,50)}if(!evaluated)return null;
-  const h=productAuto1(evaluated.predHead),selectedEval=evaluateModel(configured,q,h,50)||evaluated,impellerCfg=selectionState.productImpellerConfig;
+  const h=Math.max(1,Math.floor(Number(evaluated.predHead)||0)),selectedEval=evaluateModel(configured,q,h,50)||evaluated,impellerCfg=selectionState.productImpellerConfig;
   // B4.06.14 Product Curve: generated duty is rounded to max 1 decimal; manual Select/Enter values are never auto-rounded.
   selectionState={q,h,hz:50,selectionHz:50,curveHz:50,rawFlow:q,rawHead:h,flowUnit:'m3h',headUnit:'m',motorEffClass:'IE2',motorPhase:'3Ph',motorVoltage:415,models:[selectedEval],selectedIndex:0,productMode:true,productImpellerConfig:impellerCfg,productImpellerEditorOpen:false};
   window.keysuiteExportPayload={quotation_model:selectedEval._keysuiteDisplayModel||model.model,base_model:selectedEval._keysuitePricingBaseModel||selectedEval._keysuiteSourceModel||model.model,display_model:selectedEval._keysuiteDisplayModel||model.model,keysuite_material:opts.material||'SS304 (Cast Iron Connection)',keysuite_seal:opts.seal||'Car/Cer',keysuite_elastomer:opts.elastomer||'Viton',keysuite_connection_type:opts.connection||'round',keysuite_bare_shaft:!!opts.bare,product_mode:true};

@@ -568,7 +568,7 @@ function parsePumpOptionsText(text:any){
   const s=String(text||'');const out:any={};
   if(/\bss\s*316\b|\b316\s*(?:ss|stainless)?\b/i.test(s))out.material='SS316';
   else if(/\bss\s*304\b|\b304\s*(?:ss|stainless)?\b/i.test(s))out.material='SS304';
-  if(/\bie\s*5\b/i.test(s))out.motor_efficiency='IE5';else if(/\bie\s*4\b/i.test(s))out.motor_efficiency='IE4';else if(/\bie\s*2\b/i.test(s))out.motor_efficiency='IE2';else if(/\bie\s*3\b/i.test(s))out.motor_efficiency='IE3';
+  if(/\bie\s*5\b/i.test(s))out.motor_efficiency='IE5';else if(/\bie\s*4\b/i.test(s))out.motor_efficiency='IE4';else if(/\bie\s*3\b/i.test(s))out.motor_efficiency='IE3';else if(/\bie\s*2\b/i.test(s))out.motor_efficiency='IE2';else if(/\bie\s*1\b/i.test(s))out.motor_efficiency='IE1';
   if(/\bsi?c\s*[\/-]\s*si?c\b/i.test(s))out.seal='SiC/SiC';else if(/\btc\s*[\/-]\s*tc\b/i.test(s))out.seal='TC/TC';else if(/\bcarbon\s*[\/-]\s*si?c\b/i.test(s))out.seal='Carbon/SiC';
   if(/\bepdm\b/i.test(s))out.elastomer='EPDM';else if(/\bnbr\b/i.test(s))out.elastomer='NBR';else if(/\bviton\b/i.test(s))out.elastomer='Viton';
   if(/\boval\s*(?:flange)?\b/i.test(s))out.connection='Oval Flange';else if(/\bround\s*(?:flange)?\b/i.test(s))out.connection='Round Flange';
@@ -578,7 +578,7 @@ function parsePumpOptionsText(text:any){
 function pumpOptions(existing:any={},qty:any=1){
   const o=existing&&typeof existing==='object'?existing:{};return {
     material:['Standard','SS304','SS316'].includes(String(o.material))?String(o.material):'Standard',
-    motor_efficiency:['IE2','IE3','IE4','IE5'].includes(String(o.motor_efficiency))?String(o.motor_efficiency):'IE3',
+    motor_efficiency:['IE1','IE2','IE3','IE4','IE5'].includes(String(o.motor_efficiency))?String(o.motor_efficiency):'IE3',
     seal:['Carbon/SiC','SiC/SiC','TC/TC'].includes(String(o.seal))?String(o.seal):'Carbon/SiC',
     elastomer:['Viton','EPDM','NBR'].includes(String(o.elastomer))?String(o.elastomer):'Viton',
     connection:['Round Flange','Oval Flange'].includes(String(o.connection))?String(o.connection):'Round Flange',
@@ -605,12 +605,28 @@ function applyPumpOptionsToItem(item:any,options:any){
   if(family==='CHC'){
     model=chcVariantModel(model,o.material);
     if(displayModel)displayModel=chcVariantModel(displayModel,o.material);
+  }else if(family==='BFI'){
+    // V4.23.07 global BFI phase rule: canonical price/hydraulic model has no T;
+    // customer-facing 3Ph model ends with T. 1Ph uses IE1, 3Ph uses IE2.
+    const base=String(item?.base_model||model||displayModel).replace(/T$/i,'').trim();
+    const hintedPhase=String(item?.motor_phase||item?.phase||'');
+    const phase=hintedPhase==='1Ph'||hintedPhase==='3Ph'?hintedPhase:(/T$/i.test(String(displayModel||item?.quotation_model||model))?'3Ph':'3Ph');
+    const variant=(value:any)=>{const v=String(value||base).replace(/T$/i,'').trim();return phase==='3Ph'?`${v}T`:v};
+    model=base;
+    displayModel=variant(displayModel||base);
+    o.motor_efficiency=phase==='1Ph'?'IE1':'IE2';
+    (item as any).motor_phase=phase;
   }
   const next:any={...item,model,...(displayModel?{display_model:displayModel}:{}),qty:o.qty,options:o,keysuite_material:family==='ES'?esPricingMaterial(o.material):o.material};
   if(family==='CHC'){
     if(item?.quotation_model)next.quotation_model=chcVariantModel(item.quotation_model,o.material);
     if(item?.pricing_model)next.pricing_model=chcVariantModel(item.pricing_model,o.material);
     next.material_variant=o.material==='SS304'?'CHCS':o.material==='SS316'?'CHCN':'CHC';
+  }else if(family==='BFI'){
+    const phase=String(item?.motor_phase||'3Ph')==='1Ph'?'1Ph':'3Ph',base=String(item?.base_model||model).replace(/T$/i,'').trim();
+    const display=phase==='3Ph'?`${String(displayModel||base).replace(/T$/i,'')}T`:String(displayModel||base).replace(/T$/i,'');
+    next.model=base;next.base_model=base;next.display_model=display;next.quotation_model=display;next.motor_phase=phase;next.motor_efficiency_class=phase==='1Ph'?'IE1':'IE2';next.options={...o,motor_efficiency:next.motor_efficiency_class};
+    if(item?.pricing_model)next.pricing_model=String(item.pricing_model).replace(/T$/i,'');
   }else if(family==='ES')next.pricing_material=esPricingMaterial(o.material);
   if(previousMaterial!==o.material){delete next.unit_price;delete next.line_total;delete next.pricing;}
   return next;
@@ -1074,7 +1090,7 @@ async function guidedSizeSelectedProducts(service:any,companyId:string,products:
     const presentation=await guidedProductPresentation(service,companyId,product),series=String(presentation?.brandSeries||product?.brand_series||product?.product_label||(group==='ES'?'ES':'CHC')).trim();
     const poles=group==='ES'?[2,4]:[0];
     for(const pole of poles){let rows:any[]=[];try{rows=selectPumpCandidates(guidedSelectorFamily(group),q,h,pole,3)||[]}catch(_){rows=[]}
-      for(const row of rows){const displayModel=guidedAliasModel(String(row.model||''),presentation,group)||String(row.model||'');out.push({...guidedApplyProductIdentity({...row,series,display_model:displayModel},product),product,display_model:displayModel,series,selector_rank:Number(row.selector_rank||999)});}
+      for(const row of rows){const sourceDisplay=String(row.display_model||row.model||''),displayModel=guidedAliasModel(sourceDisplay,presentation,group)||sourceDisplay;out.push({...guidedApplyProductIdentity({...row,series,display_model:displayModel},product),product,display_model:displayModel,series,selector_rank:Number(row.selector_rank||999)});}
     }
   }
   const seen=new Set<string>(),dedup=out.sort(guidedSelectionCandidateCompare).filter((x:any)=>{const k=[x?.product?.key,x?.display_model||x?.model,x?.pole||0].join('|');if(seen.has(k))return false;seen.add(k);return true});return dedup.slice(0,12);
@@ -1504,15 +1520,15 @@ function exactChcRatedPoint(model:any,generationOrGroup:any='G2'){
   const row=(db?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row||!core)return null;
   const seriesText=String(row.series||row.model||''),q=Number((seriesText.match(/CHC\s*(\d+(?:\.\d+)?)/i)||[])[1]||0);
   if(!(q>0))return null;
-  try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:h,efficiency:Number(atRated?.eff||0)};}catch(_){ }
+  try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:Math.max(1,Math.floor(h)),efficiency:Number(atRated?.eff||0)};}catch(_){ }
   return null;
 }
 function exactBfiRatedPoint(model:any){
-  const db:any=(globalThis as any).KeySuiteBFIData,core:any=(globalThis as any).KeySuiteBFICore,wanted=String(model||'').replace(/\s+/g,' ').trim().toUpperCase();
+  const db:any=(globalThis as any).KeySuiteBFIData,core:any=(globalThis as any).KeySuiteBFICore,wanted=String(model||'').replace(/T$/i,'').replace(/\s+/g,' ').trim().toUpperCase();
   const row=(db?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row||!core)return null;
   const seriesText=String(row.series||row.model||''),q=Number((seriesText.match(/BFI\s*(\d+(?:\.\d+)?)/i)||[])[1]||0);
   if(!(q>0))return null;
-  try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:h,efficiency:Number(atRated?.eff||0)};}catch(_){ }
+  try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:Math.max(1,Math.floor(h)),efficiency:Number(atRated?.eff||0)};}catch(_){ }
   return null;
 }
 function exactEsRatedPoint(model:any,pole:any){
@@ -1539,8 +1555,10 @@ async function guidedSendExactRatedCurve(service:any,telegramToken:string,compan
 }
 
 function directBfiModelInfo(model:any){
-  const wanted=String(model||'').trim().toUpperCase(),db:any=(globalThis as any).KeySuiteBFIData,row=(db?.models||[]).find((x:any)=>String(x.model||'').toUpperCase()===wanted);if(!row)return null;
-  return {family:'BFI',brand:'B.G.Reich',series:String(row.series||'BFI'),model:String(row.model||''),motor_kw:Number(row.motor_kw||0),motor_hp:Number(row.motor_hp||0),pole:2,rpm:2900,stages:Number(row.stages||0),connection:String(row.connection||'-'),inlet:String(row.inlet||'-'),outlet:String(row.outlet||'-'),max_pressure_bar:Number(row.max_pressure_bar||0),weight_kg:Number(row.weight_kg||0),motor_phase:Array.isArray(row.phases)&&row.phases.includes('3Ph')?'3Ph':String(row.phases?.[0]||'1Ph')};
+  const input=String(model||'').trim(),explicit3=/T$/i.test(input),wanted=input.replace(/T$/i,'').toUpperCase(),db:any=(globalThis as any).KeySuiteBFIData,row=(db?.models||[]).find((x:any)=>String(x.model||'').toUpperCase()===wanted);if(!row)return null;
+  const phases=Array.isArray(row.phases)&&row.phases.length?row.phases:['3Ph'];let phase=explicit3?'3Ph':'1Ph';if(!phases.includes(phase))phase=phases.includes('3Ph')?'3Ph':String(phases[0]||'1Ph');
+  const base=String(row.model||''),display=phase==='3Ph'?base.replace(/T$/i,'')+'T':base.replace(/T$/i,''),motorEff=phase==='1Ph'?'IE1':'IE2';
+  return {family:'BFI',brand:'B.G.Reich',series:String(row.series||'BFI'),model:base,base_model:base,display_model:display,quotation_model:display,motor_kw:Number(row.motor_kw||0),motor_hp:Number(row.motor_hp||0),motor_efficiency_class:motorEff,pole:2,rpm:2900,stages:Number(row.stages||0),connection:String(row.connection||'-'),inlet:String(row.inlet||'-'),outlet:String(row.outlet||'-'),max_pressure_bar:Number(row.max_pressure_bar||0),weight_kg:Number(row.weight_kg||0),motor_phase:phase};
 }
 function directPumpInfo(model:any){const text=String(model||'');if(/^BFI\b/i.test(text))return directBfiModelInfo(text);if(/^CHC\b|^VMS\b/i.test(text))return directChcModelInfo(text);return null}
 function systemTankLitresForSeries(series:any){const value=Number(series)||0;if(value>0&&value<=10)return 24;if(value>=12&&value<=28)return 35;if(value>=32&&value<=90)return 100;if(value>=120&&value<=150)return 200;if(value===200)return 300;return 0}
@@ -1825,7 +1843,7 @@ function customerHintFromMessage(text:any,req:any={}){
     .replace(/\b(?:head\s*[:=]?\s*)?\d+(?:\.\d+)?\s*(?:mtr|metres?|meters?|m|ft|feet|foot|bar|kpa|psi)\b/ig,' ')
     .replace(/\b\d+(?:\.\d+)?\s*(?:l|ltr|litres?|liters?)\b/ig,' ')
     .replace(/\bmodel\s*[:=]?\s*[a-z0-9._\/-]+\b/ig,' ')
-    .replace(/\b(?:ss\s*304|ss\s*316|304\s*(?:ss|stainless)?|316\s*(?:ss|stainless)?|ie\s*[2345]|sic\s*[\/-]\s*sic|tc\s*[\/-]\s*tc|carbon\s*[\/-]\s*sic|epdm|nbr|viton|round\s*(?:flange)?|oval\s*(?:flange)?|bare\s*shaft)\b/ig,' ')
+    .replace(/\b(?:ss\s*304|ss\s*316|304\s*(?:ss|stainless)?|316\s*(?:ss|stainless)?|ie\s*[12345]|sic\s*[\/-]\s*sic|tc\s*[\/-]\s*tc|carbon\s*[\/-]\s*sic|epdm|nbr|viton|round\s*(?:flange)?|oval\s*(?:flange)?|bare\s*shaft)\b/ig,' ')
     .replace(/[,@;|]+/g,' ')
     .replace(/\s+/g,' ').trim();
   if(/^(?:customer|company)$/i.test(s))return '';
@@ -1837,7 +1855,7 @@ function simpleRequestHasTechnical(req:any){return !!(req?.product_type||req?.fa
 function simpleRequestMenuText(){return 'Fast Search\n\nType a model directly:\nCHC 10-100\nBFI 8-3\nB.G.Reich CHC 10-100\nES 32-20 4P\n\nFor Customer + Product, use 2 rows:\nKey\nCHC 30m3/hr @ 90m\n\nRow 1 = Company / Customer\nRow 2 = Brand / Series / Model / Duty\n\nYou can still use Customer, Product or Selection below.'}
 async function sendSimpleCurve(service:any,telegramToken:string,companyId:string,chatId:string,senderId:string,session:any,request:any){
   const req=mergeQuoteRequest(sessionContext(session).pending_request,request);req.product_type='pump';
-  if(req.direct_model){const info=directPumpInfo(req.direct_model);if(!info){await telegramSend(telegramToken,chatId,`Pump model ${req.direct_model} was not found.`,mainMenuMarkup());return session}const item=applyPumpOptionsToItem({...info,qty:Math.max(1,Number(req.qty||1))},mergePumpOptions({},req.options,req.qty||1));const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'curve',step:'direct_model_result',selected_customer_id:null,context:{pending_request:req,pending_item:item}});await telegramSend(telegramToken,chatId,[`Model: ${item.model}`,`Type: ${String(item.family||'').toUpperCase()==='BFI'?'BFI · Horizontal Multistage Pump':'VMS · Vertical Multistage Inline Pump'}`,Number(item.motor_kw)>0?`Motor: ${inputNumber(item.motor_kw)} kW / ${inputNumber(item.motor_hp)} HP`:null,item.connection?`Connection: ${item.connection}`:null].filter(Boolean).join('\n'),telegramReplyKeyboard([['⚙️ Options','💰 Check Price'],['🔄 New Request']]));return saved}
+  if(req.direct_model){const info=directPumpInfo(req.direct_model);if(!info){await telegramSend(telegramToken,chatId,`Pump model ${req.direct_model} was not found.`,mainMenuMarkup());return session}const item=applyPumpOptionsToItem({...info,qty:Math.max(1,Number(req.qty||1))},mergePumpOptions({},req.options,req.qty||1));const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'curve',step:'direct_model_result',selected_customer_id:null,context:{pending_request:req,pending_item:item}});await telegramSend(telegramToken,chatId,[`Model: ${item.display_model||item.model}`,`Type: ${String(item.family||'').toUpperCase()==='BFI'?'BFI · Horizontal Multistage Pump':'VMS · Vertical Multistage Inline Pump'}`,Number(item.motor_kw)>0?`Motor: ${inputNumber(item.motor_kw)} kW / ${inputNumber(item.motor_hp)} HP`:null,item.connection?`Connection: ${item.connection}`:null].filter(Boolean).join('\n'),telegramReplyKeyboard([['⚙️ Options','💰 Check Price'],['🔄 New Request']]));return saved}
   const missing=simplePumpMissing(req);
   if(missing==='duty'){const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'smart_curve',step:'smart_waiting_flow',selected_customer_id:null,context:{pending_request:req}});await telegramSend(telegramToken,chatId,'Please enter Flow & Head together.\nExample: 30m3/hr @ 80m',telegramRemoveKeyboard());return saved}
   if(missing==='family'){const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'smart_curve',step:'smart_waiting_family',selected_customer_id:null,context:{pending_request:req}});await telegramSend(telegramToken,chatId,'Please choose the pump series:',telegramReplyKeyboard([['CHC','BFI'],['ES 2 Pole','ES 4 Pole'],['🔄 New Request']]));return saved}
