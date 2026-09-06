@@ -17,7 +17,7 @@ Run the new migration after deploying the files:
 
 `supabase db push`
 
-The V4.23.02 migration is `supabase/migrations/V42302_BFI_GLOBAL.sql`.
+The V4.23.02 migration is `supabase/migrations/20260906160000_v42302_bfi_global.sql`.
 It creates the independent BFI price table/RPCs, settings multipliers, BFI product-group mapping and seeds all 63 supplied BFI SKUs.
 
 ## Source workbooks

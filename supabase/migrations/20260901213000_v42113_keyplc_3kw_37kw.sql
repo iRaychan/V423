@@ -59,7 +59,6 @@ begin
         or regexp_replace(lower(coalesce(model,'')), '[[:space:]]+', '', 'g') = '37kw';
   end if;
 end $$;
-
 select id, model, motor_kw, source_row, rarity, status, variants
 from public.ks_products_keyplc
 where abs(coalesce(motor_kw,0)::numeric - 3.0) < 0.0001

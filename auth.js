@@ -92,7 +92,7 @@
       bfiProducts=await client.from('ks_products_bfi').select('*').eq('status','active').order('source_row');
       if(bfiProducts.error)throw bfiProducts.error;
     }catch(error){
-      console.warn('BFI database Price List is not installed yet. Static BFI technical data will remain available; run V42302_BFI_GLOBAL.sql for pricing.',error);
+      console.warn('BFI database Price List is not installed yet. Static BFI technical data will remain available; run 20260906160000_v42302_bfi_global.sql for pricing.',error);
       bfiProducts={data:[]};
     }
     let customerPricingRows=[];

@@ -11,6 +11,6 @@ This patch adds B.G.Reich BFI globally while leaving CHC C4/C6 independent and u
 4. Refresh KeySuite so the V4.23.02 service-worker cache replaces V4.23.01.
 
 ## Database migration
-`supabase/migrations/V42302_BFI_GLOBAL.sql`
+`supabase/migrations/20260906160000_v42302_bfi_global.sql`
 
 The migration creates BFI pricing/settings/RPC support and seeds 63 BFI product SKUs using the supplied V1.0 source prices (currently 0.00).
