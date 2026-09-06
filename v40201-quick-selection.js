@@ -1,4 +1,4 @@
-/* KeySuite V4.23.05 — Brand-level tick controls all visible series; CHC and BFI Enhanced are available but default unticked. Dashboard Brand / Series follows User Assigned when no customer, and User Assigned × Customer Price Preference when selected.
+/* KeySuite V4.23.06 — Brand-level tick controls all visible series; CHC and BFI Enhanced are available but default unticked. Dashboard Brand / Series follows User Assigned when no customer, and User Assigned × Customer Price Preference when selected.
    Preserves the user-entered Quick Selection flow/head units into the selected-model view and PDF.
    Hydraulic selection remains in m³/hr and metres. */
 (() => {

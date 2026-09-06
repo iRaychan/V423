@@ -1,4 +1,4 @@
-/* KeySuite V4.23.05 — BFI global integration (Product, Selection, Price List, Quote, Assembly). */
+/* KeySuite V4.23.06 — BFI global integration (Product, Selection, Price List, Quote, Assembly). */
 (()=>{'use strict';
 if(window.__KEYSUITE_BFI_V42302__)return;window.__KEYSUITE_BFI_V42302__=true;
 const $=id=>document.getElementById(id),DB=()=>window.KeySuiteBFIProductData||{models:[]},esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=(v,d=2)=>Number(v||0).toLocaleString('en-MY',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -33,5 +33,5 @@ function init(next,userAccess){data=next||data||{};access=userAccess||access;if(
 function bind(){if(document.body.dataset.bfi42302Bound)return;document.body.dataset.bfi42302Bound='1';$('bfiProductSearch')?.addEventListener('input',renderProduct);$('bfiProductPhase')?.addEventListener('change',renderProduct);$('bfiPriceSearch')?.addEventListener('input',renderPriceList);$('bfiPriceCurrency')?.addEventListener('change',renderPriceList);$('saveBfiUsdMultiplier')?.addEventListener('click',()=>saveRate('USD'));$('saveBfiRmbMultiplier')?.addEventListener('click',()=>saveRate('RMB'));window.addEventListener('KEYSUITE_V393_BRAND_CONTEXT_CHANGED',ev=>{if(String(ev.detail?.family||'').toUpperCase()!=='BFI')return;brandContext={...brandContext,...ev.detail};renderProduct()});window.addEventListener('message',ev=>{const m=ev.data||{};if(m.type==='KEYSUITE_PRODUCT_FRAME_READY'&&String(m.family||'').toUpperCase()==='BFI'){$('productBfiSelectorFrame')?.contentWindow?.postMessage({type:'KEYSUITE_V393_BRAND_CONTEXT',brand:brandContext},'*')}})}
 function pageShown(id){if(id==='productBfi')renderProduct();if(id==='bfiPriceList')renderPriceList()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();data=window.KEYSUITE_SECURE_DATA||data;renderProduct();renderPriceList()},{once:true});else{bind();data=window.KEYSUITE_SECURE_DATA||data;renderProduct();renderPriceList()}
-window.KeySuiteBFI={version:'4.23.05',init,rows,find,renderProduct,renderPriceList,pageShown,openCurve,routeSelection,quoteDescription};
+window.KeySuiteBFI={version:'4.23.06',init,rows,find,renderProduct,renderPriceList,pageShown,openCurve,routeSelection,quoteDescription};
 })();

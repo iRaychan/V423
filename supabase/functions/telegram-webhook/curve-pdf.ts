@@ -411,14 +411,18 @@ function drawDimensionTable(page:any,font:any,x:number,y:number,leftRows:[string
   const top=y+3;
   const leftBottom=y-leftCount*rowH+3;
   const rightBottom=y-rightCount*rowH+3;
+  const centreBottom=y-Math.max(leftCount,rightCount)*rowH+3;
 
-  // Global Page 3 rule:
-  // Line 1/2/3 follow the full left-side dimension list.
-  // Line 3 is drawn once only at the report centre.
-  // Line 4/5 retain the shorter right-side table height.
-  [line1,line2,line3].forEach(xx=>page.drawLine({
+  // Global Page 3 dimension-table rule (V4.23.06):
+  // Line 1/2 follow the left block, Line 4/5 follow the right block.
+  // Line 3 is the single centre divider and ALWAYS spans the full/main
+  // dimension block (the longer side), matching the established CHC layout.
+  [line1,line2].forEach(xx=>page.drawLine({
     start:{x:xx,y:top},end:{x:xx,y:leftBottom},thickness:.55,color:rgb(.1,.1,.1)
   }));
+  page.drawLine({
+    start:{x:line3,y:top},end:{x:line3,y:centreBottom},thickness:.55,color:rgb(.1,.1,.1)
+  });
   [line4,line5].forEach(xx=>page.drawLine({
     start:{x:xx,y:top},end:{x:xx,y:rightBottom},thickness:.55,color:rgb(.1,.1,.1)
   }));
