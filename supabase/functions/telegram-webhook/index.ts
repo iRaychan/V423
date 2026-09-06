@@ -1154,7 +1154,8 @@ async function keybotFastOpenMatch(service:any,telegramToken:string,companyId:st
       if(group==='ES'){
         const rated=exactEsRatedPoint(exact?.master_model,pole);if(!rated)throw new Error('Rated point could not be resolved for this ES model.');let item:any=selectPumpSummary('ES',Number(rated.flow_m3h),Number(rated.head_m),pole,String(exact?.master_model||''));item=guidedApplyProductIdentity({...item,display_model:display},product);lines.push('Type: End Suction Pump',`Speed: ${pole}P · ${inputNumber(item.rpm||0)} rpm`,Number(item.motor_kw)>0?`Motor: ${inputNumber(item.motor_kw)} kW / ${inputNumber(item.motor_hp)} HP`:null,item.suction?`Suction: ${item.suction}`:null,item.discharge?`Discharge: ${item.discharge}`:null,Number(item.impeller_mm)>0?`Full Size Impeller: Ø${inputNumber(item.impeller_mm)} mm`:null,Number(rated.min_impeller_mm)>0?`Min Size Impeller: Ø${inputNumber(rated.min_impeller_mm)} mm`:null);saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'guided',step:'guided_exact_model_action',flow_m3h:Number(rated.flow_m3h),head_m:Number(rated.head_m),selected_customer_id:String(customer?.id||'')||null,context:{...c,pending_item:item,guided_exact_rated:rated}})||saved;
       }else{
-        const info=directChcModelInfo(exact?.master_model,group);if(info)lines.push('Type: Vertical Multistage Inline Pump',Number(info.motor_kw)>0?`Motor: ${inputNumber(info.motor_kw)} kW / ${inputNumber(info.motor_hp)} HP`:null,info.connection?`Connection: ${info.connection}`:null);
+        const info=group==='BFI'?directBfiModelInfo(exact?.master_model):directChcModelInfo(exact?.master_model,group);
+        if(info)lines.push(group==='BFI'?'Type: Horizontal Multistage Pump':'Type: Vertical Multistage Inline Pump',Number(info.motor_kw)>0?`Motor: ${inputNumber(info.motor_kw)} kW / ${inputNumber(info.motor_hp)} HP`:null,info.connection?`Connection: ${info.connection}`:null);
       }
       await telegramSend(telegramToken,chatId,lines.filter(Boolean).join('\n'),telegramRemoveKeyboard());
       return await guidedSendExactRatedCurve(service,telegramToken,companyId,chatId,senderId,saved||session,customer,product,exact,pole);
@@ -1167,7 +1168,7 @@ async function keybotFastHandleProduct(service:any,telegramToken:string,companyI
   if(keybotFastLooksLikeExactPumpModel(raw)){const exactMatches=keybotFastPrepareMatches(await keybotFastModelMatches(service,companyId,products,raw),raw);if(exactMatches.length===1)return await keybotFastOpenPreparedMatch(service,telegramToken,companyId,chatId,senderId,session,customer,exactMatches[0],{keysuite_user_email:user.email,...(customer?{customer_name:customer.company_name}:{})});if(exactMatches.length>1){const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'guided',step:'guided_fast_model_choice',selected_customer_id:String(customer?.id||'')||null,context:{...sessionContext(session),keysuite_user_email:user.email,...(customer?{customer_name:customer.company_name}:{}),guided_fast_matches:exactMatches}});await telegramSend(telegramToken,chatId,'More than one matching model was found. Choose the desired Brand / Model:',keybotFastMatchKeyboard(exactMatches));return saved||session}await telegramSend(telegramToken,chatId,`No exact assigned pump model matched “${raw}”.`,mainMenuMarkup());return session}
   const parsed=smartQuoteRequest(productText);
   if(Number(parsed.flow_m3h)>0&&Number(parsed.head_m)>0&&keybotFastLooksLikePump(raw)){
-    const scoped=keybotFastStripBrand(raw,products),brandKey=cleanSearch(scoped.brand),family=quoteFamilyFromText(raw),wanted=(products||[]).filter((p:any)=>p.has_curve===true).filter((p:any)=>!brandKey||cleanSearch(p.brand_name)===brandKey).filter((p:any)=>{const g=String(p.price_group||'').toUpperCase();return family.startsWith('ES')?g==='ES':['CHC_G1','CHC_G2'].includes(g)});
+    const scoped=keybotFastStripBrand(raw,products),brandKey=cleanSearch(scoped.brand),family=quoteFamilyFromText(raw),wanted=(products||[]).filter((p:any)=>p.has_curve===true).filter((p:any)=>!brandKey||cleanSearch(p.brand_name)===brandKey).filter((p:any)=>{const g=String(p.price_group||'').toUpperCase();return family.startsWith('ES')?g==='ES':family==='BFI'?g==='BFI':['CHC_G1','CHC_G2'].includes(g)});
     const candidates=await guidedSizeSelectedProducts(service,companyId,wanted,Number(parsed.flow_m3h),Number(parsed.head_m));if(!candidates.length){await telegramSend(telegramToken,chatId,'No suitable model was found for that Customer / Brand / Series / Duty.',mainMenuMarkup());return session}const chosen=candidates[0],product=chosen.product,pole=Number(chosen.pole||0),saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'guided',step:'guided_product_action',flow_m3h:Number(parsed.flow_m3h),head_m:Number(parsed.head_m),selected_customer_id:String(customer?.id||'')||null,context:{...sessionContext(session),keysuite_user_email:user.email,...(customer?{customer_name:customer.company_name}:{}),guided_product:product,pending_item:chosen,guided_selection_candidates:candidates,guided_pending_request:{...parsed,pole,force_model:String(chosen.model||'')}}});await telegramSend(telegramToken,chatId,`${customer?`Customer: ${customer.company_name}\n\n`:''}Recommended - ${guidedSelectionPumpLabel(chosen)}\nMotor: ${oneDecimal(chosen.motor_kw||0)} kW${pole?` · ${pole}P`:''}\nDuty: ${oneDecimal(parsed.flow_m3h)} m³/hr @ ${oneDecimal(parsed.head_m)} Mtr\n\nChoose action:`,guidedProductActionMenu(String(chosen.family||'').toUpperCase()==='ES'));return saved||session
   }
   if(keybotFastLooksLikePump(raw)){
@@ -1506,6 +1507,14 @@ function exactChcRatedPoint(model:any,generationOrGroup:any='G2'){
   try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:h,efficiency:Number(atRated?.eff||0)};}catch(_){ }
   return null;
 }
+function exactBfiRatedPoint(model:any){
+  const db:any=(globalThis as any).KeySuiteBFIData,core:any=(globalThis as any).KeySuiteBFICore,wanted=String(model||'').replace(/\s+/g,' ').trim().toUpperCase();
+  const row=(db?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row||!core)return null;
+  const seriesText=String(row.series||row.model||''),q=Number((seriesText.match(/BFI\s*(\d+(?:\.\d+)?)/i)||[])[1]||0);
+  if(!(q>0))return null;
+  try{const atRated=core.evaluateModel(db,row,q,0,50),h=Number(atRated?.predHead||0);if(q>0&&h>0)return {flow_m3h:q,head_m:h,efficiency:Number(atRated?.eff||0)};}catch(_){ }
+  return null;
+}
 function exactEsRatedPoint(model:any,pole:any){
   const core:any=(globalThis as any).ESCore,db:any=(globalThis as any).ES_SELECTOR_DB,p=Number(pole),rpm=p===2?2900:p===4?1450:0,wanted=String(model||'').replace(/^ES\s+/i,'').trim().toUpperCase();if(!core||!db||!rpm)return null;
   const pump=(db.pumps||[]).find((x:any)=>String(x.model||'').toUpperCase()===wanted&&Number(x.rpm||0)===rpm);if(!pump)return null;
@@ -1513,8 +1522,12 @@ function exactEsRatedPoint(model:any,pole:any){
 }
 async function guidedSendExactRatedCurve(service:any,telegramToken:string,companyId:string,chatId:string,senderId:string,session:any,customer:any,product:any,exact:any,pole:any=0){
   const group=String(product?.price_group||'').toUpperCase(),family=guidedSelectorFamily(group),esPole=family==='ES'?Number(pole||exact?.pole||0):0;
-  const rated:any=family==='ES'?exactEsRatedPoint(exact?.master_model,esPole):exactChcRatedPoint(exact?.master_model,group);
-  if(!rated)throw new Error(family==='ES'?`Rated Full Size point could not be resolved for ${exact?.display_model||exact?.master_model||'this ES model'}${esPole?` · ${esPole} Pole`:''}.`:`Rated point could not be resolved for ${exact?.display_model||exact?.master_model||'this CHC model'}.`);
+  const rated:any=family==='ES'?exactEsRatedPoint(exact?.master_model,esPole):family==='BFI'?exactBfiRatedPoint(exact?.master_model):exactChcRatedPoint(exact?.master_model,group);
+  if(!rated){
+    if(family==='ES')throw new Error(`Rated Full Size point could not be resolved for ${exact?.display_model||exact?.master_model||'this ES model'}${esPole?` · ${esPole} Pole`:''}.`);
+    if(family==='BFI')throw new Error(`Rated point could not be resolved for ${exact?.display_model||exact?.master_model||'this BFI model'}.`);
+    throw new Error(`Rated point could not be resolved for ${exact?.display_model||exact?.master_model||'this CHC model'}.`);
+  }
   const q=Number(rated.flow_m3h),h=Number(rated.head_m),duty=`${oneDecimal(q)} m³/hr @ ${oneDecimal(h)} Mtr`;
   const curveIdentity=await guidedCurveDisplayIdentity(service,companyId,product,String(exact?.master_model||''),String(exact?.display_model||''));
   const pdf=await generateCurvePdf(family,q,h,duty,env('KEYSUITE_PUBLIC_URL'),family==='ES'?esPole:0,String(exact?.master_model||''),curveIdentity);

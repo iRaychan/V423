@@ -48,6 +48,37 @@ function chcG1DimensionImageKey(series:any,material:any){
   return '';
 }
 
+const BFI_DIMENSION_BASE:any={
+  'BFI 1':{w:158,h:165,image:'bfi-1.png'},
+  'BFI 2':{w:158,h:165,image:'bfi-2-3.png'},
+  'BFI 3':{w:158,h:165,image:'bfi-2-3.png'},
+  'BFI 4':{w:158,h:165,image:'bfi-4-5.png'},
+  'BFI 5':{w:158,h:165,image:'bfi-4-5.png'},
+  'BFI 8':{w:182,h:null,image:'bfi-8-11-12-13.png'},
+  'BFI 11':{w:182,h:null,image:'bfi-8-11-12-13.png'},
+  'BFI 12':{w:182,h:null,image:'bfi-8-11-12-13.png'},
+  'BFI 13':{w:182,h:null,image:'bfi-8-11-12-13.png'},
+  'BFI 10':{w:182,h:null,image:'bfi-10.png'},
+  'BFI 15':{w:182,h:null,image:'bfi-15-20.png'},
+  'BFI 20':{w:182,h:null,image:'bfi-15-20.png'}
+};
+function bfiSeriesKey(model:any,series:any=''){
+  const explicit=String(series||'').trim().toUpperCase(),m=String(model||'').match(/BFI\s*(\d+)/i);
+  return m?`BFI ${m[1]}`:(explicit.match(/^BFI\s+\d+$/)?explicit:'');
+}
+function bfiDimValue(dim:any,key:string,phase:string){
+  const v=dim?.[`${key} (${phase})`];
+  return v===null||v===undefined||v===''||!finite(v)?null:Number(v);
+}
+function bfiDimensionSummary(model:any,series:any,dim:any,phase:any,weightKg:any){
+  const ph=String(phase||'3Ph')==='1Ph'?'1Ph':'3Ph',key=bfiSeriesKey(model,series),base=BFI_DIMENSION_BASE[key]||{};
+  const values:any={};['L1','L2','L3','L4','L5','L6','B1','B2','H','H2'].forEach(k=>values[k]=bfiDimValue(dim,k,ph));
+  const nums=(a:any[])=>a.filter(v=>v!==null&&v!==undefined&&v!==''&&finite(v)).map(Number);
+  const ls=nums([values.L1,values.L2,values.L3,values.L4,values.L5,values.L6]);
+  const ws=nums([base.w,values.B1,values.B2]),hs=nums([base.h,values.H,values.H2]);
+  return {key,phase:ph,values,length:ls.length?Math.max(...ls):0,width:ws.length?Math.max(...ws):0,height:hs.length?Math.max(...hs):0,weight:Number(weightKg||0)||0,image:String(base.image||'')};
+}
+
 
 type XY={x:number,y:number};
 type ChartSpec={
@@ -428,14 +459,22 @@ function drawPage3CHC(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   page.drawText('* Approximate dimension & weight',{x:tableX,y:92,size:8,font:font.regular,color:rgb(.10,.10,.10)});
 }
 
-function drawPage3BFI(page:any,logo:any,font:any,bold:any,a:any){
+function drawPage3BFI(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   drawDimensionHeader(page,logo,bold,a.model);drawCentered(page,bold,'Dimension',306,668,20,rgb(.03,.03,.03));
   page.drawLine({start:{x:255,y:664},end:{x:357,y:664},thickness:1.2,color:rgb(.03,.03,.03)});
-  const d=a.dim||{},phase=String(a.phase||'3Ph'),pick=(k:string)=>d[`${k} (${phase})`]??d[`${k} (3Ph)`]??d[`${k} (1Ph)`]??d[k];
-  const tableX=132.803150,tableWidths=[64.629921,108.566929,64.629921,108.566929];page.drawText('Table Dimensions',{x:tableX,y:520,size:11.5,font:bold,color:rgb(.03,.03,.03)});
-  const left=['H','H2','L1','L2','L3','L4','L5','L6'].map(k=>[k,finite(pick(k))?`${fmt(pick(k),0)} mm`:'-'] as [string,string]);
-  const right=[['B1',finite(pick('B1'))?`${fmt(pick('B1'),0)} mm`:'-'],['B2',finite(pick('B2'))?`${fmt(pick('B2'),0)} mm`:'-'],['Inlet',a.suction||'-'],['Outlet',a.discharge||'-'],['Weight',finite(a.weightKg)?`${fmt(a.weightKg,1)} kg`:'-']] as [string,string][];
-  drawDimensionTable(page,font,tableX,500,left,right,16,tableWidths);page.drawText('* Approximate dimension & weight',{x:tableX,y:352,size:8,font:font.regular,color:rgb(.10,.10,.10)});
+  if(dimImage){
+    const d=dimImage.scale(1),maxW=445,maxH=245,scale=Math.min(maxW/d.width,maxH/d.height);
+    page.drawImage(dimImage,{x:297.5-d.width*scale/2,y:355,width:d.width*scale,height:d.height*scale});
+  }
+  const summary=a.bfiDimension||bfiDimensionSummary(a.model,a.series,a.dim,a.phase,a.weightKg),values=summary.values||{};
+  const row=(k:string)=>values[k]===null||values[k]===undefined||values[k]===''||!finite(values[k])?null:[k,`${fmt(values[k],0)} mm`] as [string,string];
+  const left=['L1','L2','L3','L4','L5','L6'].map(row).filter(Boolean) as [string,string][];
+  const right=['B1','B2','H','H2'].map(row).filter(Boolean) as [string,string][];
+  if(summary.weight>0)right.push(['Weight',`${fmt(summary.weight,1)} kG`]);
+  const tableX=132.803150,tableWidths=[64.629921,108.566929,64.629921,108.566929];
+  page.drawText('Table Dimensions',{x:tableX,y:310,size:11.5,font:bold,color:rgb(.03,.03,.03)});
+  drawDimensionTable(page,font,tableX,292,left,right,16,tableWidths);
+  page.drawText('* Approximate dimension & weight',{x:tableX,y:178,size:8,font:font.regular,color:rgb(.10,.10,.10)});
 }
 function drawPage3ES(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   drawDimensionHeader(page,logo,bold,a.model);
@@ -467,7 +506,7 @@ function drawPage3ES(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
 }
 function materialFor(fam:string,option:any=''){
   const m=String(option||'').toUpperCase().replace(/\s+/g,'');
-  if(isBfiFamily(fam))return {casing:'-',impeller:'-',shaft:'-',seal:'Mechanical Seal'};
+  if(isBfiFamily(fam))return {casing:'Stainless Steel 304',impeller:'Stainless Steel 304',shaft:'Stainless Steel 304',seal:'Mechanical Seal'};
   if(isChcFamily(fam)){
     if(m==='SS316')return {casing:'SS316',impeller:'SS316',shaft:'SS316',seal:'Mechanical Seal'};
     if(m==='SS304')return {casing:'SS304',impeller:'SS304',shaft:'SS304',seal:'Mechanical Seal'};
@@ -598,22 +637,26 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
       b64=String((CHC_DIMENSION_BASE64 as any)[series]||'');
       if(b64)dimImage=await pdf.embedPng(b64bytes(b64));
     }
-  }else if(!isBfi)dimImage=await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
+  }else if(isBfi){
+    const summary=bfiDimensionSummary(model,'',dim,phase,weightKg);
+    if(summary.image){try{dimImage=await embedPublicPng(pdf,baseUrl,`assets/bfi-dimensions/${summary.image}`)}catch(error){console.warn('BFI dimension drawing unavailable',error)}}
+  }else dimImage=await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
 
-  const mt=motorTech(motorHp,pole,isChc?String(engine?.motorEff||'IE3'):'IE3');
+  const mt=motorTech(motorHp,pole,isChc?String(engine?.motorEff||'IE3'):isBfi?'IE2':'IE3');
   const pumpEnvelope=isChc?(Number(dim.d1||0)/2+Number(dim.d2||0)):0;
   const chcLength=isChc?Math.max(pumpEnvelope,Number(dim.pumpL||0)):0,chcWidth=isChc?Math.max(pumpEnvelope,Number(dim.pumpW||0)):0;
+  const bfiDimension=isBfi?bfiDimensionSummary(model,'',dim,phase,weightKg):null;
   const pumpset=isChc
     ?{length:chcLength?`${fmt(chcLength,0)} mm`:'-',width:chcWidth?`${fmt(chcWidth,0)} mm`:'-',height:dim.height?`${fmt(dim.height,0)} mm`:'-',weight:dim.weight?`${fmt(dim.weight,0)} kG`:'-'}
-    :isBfi?{length:finite(dim?.[`L1 (${phase})`])?`${fmt(dim[`L1 (${phase})`],0)} mm`:'-',width:finite(dim?.[`B1 (${phase})`])?`${fmt(dim[`B1 (${phase})`],0)} mm`:'-',height:finite(dim?.[`H (${phase})`]??dim?.[`H2 (${phase})`])?`${fmt(dim[`H (${phase})`]??dim[`H2 (${phase})`],0)} mm`:'-',weight:weightKg?`${fmt(weightKg,1)} kg`:'-'}
+    :isBfi?{length:bfiDimension?.length?`${fmt(bfiDimension.length,0)} mm`:'-',width:bfiDimension?.width?`${fmt(bfiDimension.width,0)} mm`:'-',height:bfiDimension?.height?`${fmt(bfiDimension.height,0)} mm`:'-',weight:bfiDimension?.weight?`${fmt(bfiDimension.weight,1)} kG`:'-'}
     :{length:esPs?.dimensions?.overall?.lengthMm?`${fmt(esPs.dimensions.overall.lengthMm,0)} mm`:'-',width:esPs?.dimensions?.overall?.widthMm?`${fmt(esPs.dimensions.overall.widthMm,0)} mm`:'-',height:esPs?.dimensions?.overall?.heightMm?`${fmt(esPs.dimensions.overall.heightMm,0)} mm`:'-',weight:esPs?.dimensions?.overall?.estimatedPumpsetWeightKg?`${fmt(esPs.dimensions.overall.estimatedPumpsetWeightKg,0)} kg`:'-'};
 
   const displayBrand=String(displayIdentity?.brand||'B.G.Reich').trim()||'B.G.Reich',displaySeries=String(displayIdentity?.series||(isChc?String(engine?.label||'CHC'):isBfi?'BFI':'ES')).trim()||(isChc?String(engine?.label||'CHC'):isBfi?'BFI':'ES'),displayModel=String(displayIdentity?.model||model).trim()||model;
-  const pageArgs={family:isChc?'CHC':fam,brand:displayBrand,series:displaySeries,model:displayModel,masterModel:model,dutyText,q,motorHp,motorKw,pole,hz,rpm,eff,npsh,brakeHp,suction,discharge,stages,impellerMm,maxPressure,dim,esPumpset:esPs,motorTech:mt,motorEfficiencyClass:isChc?String(engine?.motorEff||'IE3'):'IE3',pumpset,weightKg,phase,material:materialFor(isChc?'CHC':fam,displayIdentity?.material),charts};
+  const pageArgs={family:isChc?'CHC':fam,brand:displayBrand,series:displaySeries,model:displayModel,masterModel:model,dutyText,q,motorHp,motorKw,pole,hz,rpm,eff,npsh,brakeHp,suction,discharge,stages,impellerMm,maxPressure,dim,esPumpset:esPs,motorTech:mt,motorEfficiencyClass:isChc?String(engine?.motorEff||'IE3'):isBfi?'IE2':'IE3',pumpset,bfiDimension,weightKg,phase,material:materialFor(isChc?'CHC':fam,displayIdentity?.material),charts};
 
   const p1=pdf.addPage(LETTER);drawPage1(p1,logo,regular,bold,pageArgs);
   const p2=pdf.addPage(LETTER);drawPage2(p2,logo,font,bold,pageArgs);
-  const p3=pdf.addPage(LETTER);isChc?drawPage3CHC(p3,logo,font,bold,pageArgs,dimImage):isBfi?drawPage3BFI(p3,logo,font,bold,pageArgs):drawPage3ES(p3,logo,font,bold,pageArgs,dimImage);
+  const p3=pdf.addPage(LETTER);isChc?drawPage3CHC(p3,logo,font,bold,pageArgs,dimImage):isBfi?drawPage3BFI(p3,logo,font,bold,pageArgs,dimImage):drawPage3ES(p3,logo,font,bold,pageArgs,dimImage);
 
   pdf.setTitle(`${displayModel} Selection`);
   pdf.setSubject('KeySuite KeySelector frozen-layout pump performance report');
