@@ -367,7 +367,7 @@ function drawPage2(page:any,logo:any,font:any,bold:any,a:any){
 
   y=drawSection(page,font,'Pump',y);
   y=drawRow4(page,font,['Brand',a.brand||'B.G.Reich','Country of Origin','Malaysia'],y);
-  y=drawRow4(page,font,['Type',a.family==='CHC'?`${a.series||'VMS'} Pump`:a.family==='BFI'?`${a.series||'BFI'} Horizontal Multistage Pump`:`${a.series||'ES'} End Suction Pump`,'Country of Manufacture','China'],y);
+  y=drawRow4(page,font,['Type',a.family==='CHC'?`${a.series||'VMS'} Pump`:a.family==='BFI'?'HMS Pump':`${a.series||'ES'} End Suction Pump`,'Country of Manufacture','China'],y);
   y=drawRow4(page,font,['Model',{text:a.model,bold:true},'Suction Size',a.suction],y);
   y=drawRow4(page,font,['Speed',`${fmt(a.rpm,0)} rpm`,'Discharge Size',a.discharge],y);
   y=drawRow4(page,font,['Material: -','', 'Efficiency',`${fmt(a.eff,1)} %`],y);
@@ -463,8 +463,9 @@ function drawPage3BFI(page:any,logo:any,font:any,bold:any,a:any,dimImage:any){
   drawDimensionHeader(page,logo,bold,a.model);drawCentered(page,bold,'Dimension',306,668,20,rgb(.03,.03,.03));
   page.drawLine({start:{x:255,y:664},end:{x:357,y:664},thickness:1.2,color:rgb(.03,.03,.03)});
   if(dimImage){
-    const d=dimImage.scale(1),maxW=445,maxH=245,scale=Math.min(maxW/d.width,maxH/d.height);
-    page.drawImage(dimImage,{x:297.5-d.width*scale/2,y:355,width:d.width*scale,height:d.height*scale});
+    const d=dimImage.scale(1),maxW=445,maxH=245,baseScale=Math.min(maxW/d.width,maxH/d.height),scale=baseScale*.8;
+    const oldHeight=d.height*baseScale,newHeight=d.height*scale,drawY=355+(oldHeight-newHeight)/2;
+    page.drawImage(dimImage,{x:297.5-d.width*scale/2,y:drawY,width:d.width*scale,height:newHeight});
   }
   const summary=a.bfiDimension||bfiDimensionSummary(a.model,a.series,a.dim,a.phase,a.weightKg),values=summary.values||{};
   const row=(k:string)=>values[k]===null||values[k]===undefined||values[k]===''||!finite(values[k])?null:[k,`${fmt(values[k],0)} mm`] as [string,string];

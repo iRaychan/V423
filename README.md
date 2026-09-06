@@ -1,19 +1,21 @@
-# KeySuite V4.23.04 FULL CLEAN
+# KeySuite V4.23.05 FULL CLEAN
 
-V4.23.04 completes BFI PDF engineering data/dimensions and repairs Product > CHC > Curve routing.
+V4.23.05 aligns BFI Product/Curve behavior with CHC and completes the requested BFI PDF/UI consistency changes.
 
-## BFI PDF
+## V4.23.05
 
-- Casing / Impeller / Shaft: Stainless Steel 304.
-- Suction and discharge are shown independently.
-- Motor efficiency class: IE2.
-- Page 2: L = maximum L1-L6; W = maximum Dimension-sheet W/B1/B2; H = maximum Dimension-sheet H/H2/H.
-- Page 3: supplied BFI dimension drawing is selected by BFI family and blank dimension rows are omitted.
-
-## Product
-
-- Product > CHC > Curve now has shared-runtime and native fallback routing for CHC C4/C6.
+- Product > BFI model rows now use the same row layout as CHC: model + Curve / Assembly / Quote on one row.
+- Product > BFI > Curve now uses the same shared inline Product Curve route as CHC instead of the old BFI popup dialog path.
+- BFI PDF Page 2 Type is HMS Pump.
+- BFI PDF Page 3 family drawing is rendered at 80% of the previous size while retaining the supplied family-specific drawing mapping.
+- BFI Currency & Multipliers is now an expandable/collapsible Price List panel, matching the global Price List pattern.
+- BFI now supports the Enhanced tick in Dashboard Quick Selection Brand / Series Settings, with the Enhanced state passed end-to-end into BFI selection and selected-model opening.
+- BFI Enhanced results are identified the same way as CHC Enhanced results.
+- BFI product phase selection is preserved when opening an exact product curve.
+- KeyBot/Telegram BFI PDF receives the same HMS Pump and 80% Page 3 drawing updates.
 
 ## Deployment
 
-No database migration is required. Deploy the web build, then redeploy the `telegram-webhook` function for the matching KeyBot PDF output.
+- No database migration is included.
+- Deploy/overwrite the GitHub Pages web files.
+- Redeploy `telegram-webhook` because `curve-pdf.ts` changed.
