@@ -522,8 +522,9 @@ function quoteFamilyFromText(text:any){
 
 function parseDirectPumpModel(text:any){
   const raw=String(text||'');
-  const bfi=raw.match(/\bBFI\s*(\d{1,3})\s*-\s*(\d{1,3}(?:\s*-\s*\d{1,2})?)\b/i);
-  if(bfi)return {family:'BFI',model:`BFI ${bfi[1]}-${String(bfi[2]).replace(/\s+/g,'')}`};
+  // BFI identity: no suffix = 1Ph/IE1, T = 3Ph/IE2 standard, E = 3Ph/IE2 Enhanced.
+  const bfi=raw.match(/\bBFI\s*(\d{1,3})\s*-\s*(\d{1,3}(?:\s*-\s*\d{1,2})?)\s*([TE])?\b/i);
+  if(bfi){const suffix=String(bfi[3]||'').toUpperCase();return {family:'BFI',model:`BFI ${bfi[1]}-${String(bfi[2]).replace(/\s+/g,'')}${suffix}`};}
   const chc=raw.match(/\b(?:CHC|VMS)\s*(\d{1,3})\s*-\s*(\d{1,3}(?:\s*-\s*\d{1,2})?(?:\s*-\s*\d{1,2})?)\b/i);
   if(chc)return {family:'CHC',model:`CHC ${chc[1]}-${String(chc[2]).replace(/\s+/g,'')}`};
   return null;
@@ -606,16 +607,13 @@ function applyPumpOptionsToItem(item:any,options:any){
     model=chcVariantModel(model,o.material);
     if(displayModel)displayModel=chcVariantModel(displayModel,o.material);
   }else if(family==='BFI'){
-    // V4.23.07 global BFI phase rule: canonical price/hydraulic model has no T;
-    // customer-facing 3Ph model ends with T. 1Ph uses IE1, 3Ph uses IE2.
-    const base=String(item?.base_model||model||displayModel).replace(/T$/i,'').trim();
-    const hintedPhase=String(item?.motor_phase||item?.phase||'');
-    const phase=hintedPhase==='1Ph'||hintedPhase==='3Ph'?hintedPhase:(/T$/i.test(String(displayModel||item?.quotation_model||model))?'3Ph':'3Ph');
-    const variant=(value:any)=>{const v=String(value||base).replace(/T$/i,'').trim();return phase==='3Ph'?`${v}T`:v};
-    model=base;
-    displayModel=variant(displayModel||base);
-    o.motor_efficiency=phase==='1Ph'?'IE1':'IE2';
-    (item as any).motor_phase=phase;
+    // V4.23.08 BFI identity: base = 1Ph/IE1, T = 3Ph/IE2 standard, E = 3Ph/IE2 Enhanced.
+    const identity=String(displayModel||item?.quotation_model||model||''),base=String(item?.base_model||model||displayModel).replace(/[TE]$/i,'').trim();
+    const enhanced=!!item?.enhanced||/E$/i.test(identity),hintedPhase=String(item?.motor_phase||item?.phase||'');
+    const phase=enhanced?'3Ph':(hintedPhase==='1Ph'||hintedPhase==='3Ph'?hintedPhase:(/T$/i.test(identity)?'3Ph':'1Ph'));
+    const variant=(value:any)=>{const v=String(value||base).replace(/[TE]$/i,'').trim();return enhanced?`${v}E`:phase==='3Ph'?`${v}T`:v};
+    model=base;displayModel=variant(displayModel||base);o.motor_efficiency=phase==='1Ph'?'IE1':'IE2';
+    (item as any).motor_phase=phase;(item as any).enhanced=enhanced;(item as any).enhanced_curve=enhanced;
   }
   const next:any={...item,model,...(displayModel?{display_model:displayModel}:{}),qty:o.qty,options:o,keysuite_material:family==='ES'?esPricingMaterial(o.material):o.material};
   if(family==='CHC'){
@@ -623,10 +621,10 @@ function applyPumpOptionsToItem(item:any,options:any){
     if(item?.pricing_model)next.pricing_model=chcVariantModel(item.pricing_model,o.material);
     next.material_variant=o.material==='SS304'?'CHCS':o.material==='SS316'?'CHCN':'CHC';
   }else if(family==='BFI'){
-    const phase=String(item?.motor_phase||'3Ph')==='1Ph'?'1Ph':'3Ph',base=String(item?.base_model||model).replace(/T$/i,'').trim();
-    const display=phase==='3Ph'?`${String(displayModel||base).replace(/T$/i,'')}T`:String(displayModel||base).replace(/T$/i,'');
-    next.model=base;next.base_model=base;next.display_model=display;next.quotation_model=display;next.motor_phase=phase;next.motor_efficiency_class=phase==='1Ph'?'IE1':'IE2';next.options={...o,motor_efficiency:next.motor_efficiency_class};
-    if(item?.pricing_model)next.pricing_model=String(item.pricing_model).replace(/T$/i,'');
+    const identity=String(displayModel||item?.quotation_model||''),enhanced=!!item?.enhanced||/E$/i.test(identity),phase=enhanced?'3Ph':(String(item?.motor_phase||'1Ph')==='3Ph'?'3Ph':'1Ph'),base=String(item?.base_model||model).replace(/[TE]$/i,'').trim();
+    const clean=String(displayModel||base).replace(/[TE]$/i,''),display=enhanced?`${clean}E`:phase==='3Ph'?`${clean}T`:clean;
+    next.model=base;next.base_model=base;next.display_model=display;next.quotation_model=display;next.motor_phase=phase;next.motor_efficiency_class=phase==='1Ph'?'IE1':'IE2';next.enhanced=enhanced;next.enhanced_curve=enhanced;next.rpm=enhanced?3480:Number(next.rpm||2900);next.frequency_hz=enhanced?60:Number(next.frequency_hz||50);next.options={...o,motor_efficiency:next.motor_efficiency_class};
+    if(item?.pricing_model)next.pricing_model=String(item.pricing_model).replace(/[TE]$/i,'');
   }else if(family==='ES')next.pricing_material=esPricingMaterial(o.material);
   if(previousMaterial!==o.material){delete next.unit_price;delete next.line_total;delete next.pricing;}
   return next;
@@ -1458,7 +1456,7 @@ async function quotePumpForCustomer(service:any,customerId:string,item:any,keySu
     }
     rarity='';
   }else if(family==='BFI'){
-    const full=String(item?.model||'').trim(),phase=/1\s*ph/i.test(String(item?.motor_phase||item?.phase||item?.options?.phase||''))?'1ph':'3ph';
+    const full=String(item?.model||'').replace(/[TE]$/i,'').trim(),phase=/1\s*ph/i.test(String(item?.motor_phase||item?.phase||item?.options?.phase||''))?'1ph':'3ph';
     const productRes=await service.from('ks_products_bfi').select('*').ilike('model',full).maybeSingle();if(productRes.error||!productRes.data)throw new Error(`No BFI price-list record was found for ${full}.`);const p:any=productRes.data;productId=String(p.id||'');rarity='';
     candidates=['USD','RMB','MYR'].map(currency=>{const c=currency.toLowerCase();return {currency,sourcePrice:Number(p[`price_${c}_${phase}`]||0),multiplier:(rates as any)[currency],rarity:p[`rarity_${c}_${phase}`]||'common'}});
   }else if(family==='ES'){
@@ -1524,7 +1522,7 @@ function exactChcRatedPoint(model:any,generationOrGroup:any='G2'){
   return null;
 }
 function exactBfiRatedPoint(model:any){
-  const db:any=(globalThis as any).KeySuiteBFIData,core:any=(globalThis as any).KeySuiteBFICore,wanted=String(model||'').replace(/T$/i,'').replace(/\s+/g,' ').trim().toUpperCase();
+  const db:any=(globalThis as any).KeySuiteBFIData,core:any=(globalThis as any).KeySuiteBFICore,wanted=String(model||'').replace(/[TE]$/i,'').replace(/\s+/g,' ').trim().toUpperCase();
   const row=(db?.models||[]).find((m:any)=>String(m.model||'').toUpperCase()===wanted);if(!row||!core)return null;
   const seriesText=String(row.series||row.model||''),q=Number((seriesText.match(/BFI\s*(\d+(?:\.\d+)?)/i)||[])[1]||0);
   if(!(q>0))return null;
@@ -1555,10 +1553,10 @@ async function guidedSendExactRatedCurve(service:any,telegramToken:string,compan
 }
 
 function directBfiModelInfo(model:any){
-  const input=String(model||'').trim(),explicit3=/T$/i.test(input),wanted=input.replace(/T$/i,'').toUpperCase(),db:any=(globalThis as any).KeySuiteBFIData,row=(db?.models||[]).find((x:any)=>String(x.model||'').toUpperCase()===wanted);if(!row)return null;
+  const input=String(model||'').trim(),explicitEnhanced=/E$/i.test(input),explicit3=explicitEnhanced||/T$/i.test(input),wanted=input.replace(/[TE]$/i,'').toUpperCase(),db:any=(globalThis as any).KeySuiteBFIData,row=(db?.models||[]).find((x:any)=>String(x.model||'').toUpperCase()===wanted);if(!row)return null;
   const phases=Array.isArray(row.phases)&&row.phases.length?row.phases:['3Ph'];let phase=explicit3?'3Ph':'1Ph';if(!phases.includes(phase))phase=phases.includes('3Ph')?'3Ph':String(phases[0]||'1Ph');
-  const base=String(row.model||''),display=phase==='3Ph'?base.replace(/T$/i,'')+'T':base.replace(/T$/i,''),motorEff=phase==='1Ph'?'IE1':'IE2';
-  return {family:'BFI',brand:'B.G.Reich',series:String(row.series||'BFI'),model:base,base_model:base,display_model:display,quotation_model:display,motor_kw:Number(row.motor_kw||0),motor_hp:Number(row.motor_hp||0),motor_efficiency_class:motorEff,pole:2,rpm:2900,stages:Number(row.stages||0),connection:String(row.connection||'-'),inlet:String(row.inlet||'-'),outlet:String(row.outlet||'-'),max_pressure_bar:Number(row.max_pressure_bar||0),weight_kg:Number(row.weight_kg||0),motor_phase:phase};
+  const enhanced=explicitEnhanced&&phase==='3Ph',base=String(row.model||'').replace(/[TE]$/i,''),display=enhanced?`${base}E`:phase==='3Ph'?`${base}T`:base,motorEff=phase==='1Ph'?'IE1':'IE2';
+  return {family:'BFI',brand:'B.G.Reich',series:String(row.series||'BFI'),model:base,base_model:base,display_model:display,quotation_model:display,motor_kw:Number(row.motor_kw||0),motor_hp:Number(row.motor_hp||0),motor_efficiency_class:motorEff,pole:2,rpm:enhanced?3480:2900,frequency_hz:enhanced?60:50,stages:Number(row.stages||0),connection:String(row.connection||'-'),inlet:String(row.inlet||'-'),outlet:String(row.outlet||'-'),max_pressure_bar:Number(row.max_pressure_bar||0),weight_kg:Number(row.weight_kg||0),motor_phase:phase,enhanced,enhanced_curve:enhanced};
 }
 function directPumpInfo(model:any){const text=String(model||'');if(/^BFI\b/i.test(text))return directBfiModelInfo(text);if(/^CHC\b|^VMS\b/i.test(text))return directChcModelInfo(text);return null}
 function systemTankLitresForSeries(series:any){const value=Number(series)||0;if(value>0&&value<=10)return 24;if(value>=12&&value<=28)return 35;if(value>=32&&value<=90)return 100;if(value>=120&&value<=150)return 200;if(value===200)return 300;return 0}

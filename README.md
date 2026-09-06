@@ -1,13 +1,25 @@
-# KeySuite V4.23.07 FULL CLEAN
+# KeySuite V4.23.08 FULL CLEAN
 
-V4.23.07 aligns Product curve Enhanced behavior and BFI motor phase identity.
+V4.23.08 completes the pending Enhanced/phase and BFI Category-pricing corrections on top of V4.23.07.
 
-## V4.23.07
-- Product > CHC C6 > Curve now exposes Enhanced and switches the exact Product model into the CHC Enhanced hydraulic engine. Standard mode retains the Product impeller-adjustment editor.
-- Product > BFI > Curve Enhanced now recalculates the exact BFI model instead of only changing the tick state.
-- BFI model identity is phase-specific: no T = 1 Phase / IE1 data; T = 3 Phase / IE2 data.
-- BFI Product, quotation payloads, selector display and PDF motor data follow the phase-specific naming/data rule.
-- Exact-model Product auto duty keeps the design Flow and floors only the automatically generated Head to a whole metre (for example 13.4 m -> 13 m). Manual duty points are unchanged.
-- CHC C4/C6 and BFI Product auto-duty Head use the same floor rule.
+## V4.23.08
+- BFI Enhanced is available for 3 Phase only.
+  - Standard 1 Phase: `BFI 10-3` -> IE1 data.
+  - Standard 3 Phase: `BFI 10-3T` -> IE2 data.
+  - Enhanced 3 Phase: `BFI 10-3E` -> IE2 data + Enhanced curve.
+  - Selecting 1 Phase automatically disables/unticks Enhanced.
+- BFI Product/Selector/quotation identity carries the `E` / `T` / base suffix consistently. KeyBot direct-model handling and BFI curve PDF also recognize the `E` identity.
+- Product > CHC C4 > Curve now exposes the Enhanced tick like CHC C6, and the C4 Product selector can enter the existing C4 Enhanced hydraulic mode. Quick Selection Brand / Series Settings also treats CHC C4 and C6 as Enhanced-capable.
+- BFI pricing-category save no longer falls through to the legacy category RPC that rejects BFI. Category Compare uses the same BFI-safe save RPC.
+- Removed the misleading blanket `Run V41511_CATEGORY_CURRENCY_SELECTION.sql first` error suffix; the actual database error is shown.
+- Existing V4.23.07 exact-model auto-duty rule remains: automatic Head is floored to a whole metre while manually entered duty points are unchanged.
 
-No database migration is required. The Telegram/KeyBot function changed for BFI phase-specific PDF/model handling and should be redeployed.
+## Deployment
+This release includes a new Supabase migration. After replacing the web files, run:
+
+```powershell
+npx.cmd supabase db push
+npx.cmd supabase functions deploy telegram-webhook
+```
+
+Then deploy/update GitHub Pages and hard-refresh KeySuite.

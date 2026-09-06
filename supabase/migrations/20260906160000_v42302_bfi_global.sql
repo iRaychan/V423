@@ -5,11 +5,9 @@
 -- BFI is independent of CHC C4/C6. Source price cells are imported as supplied (0.00).
 
 begin;
-
 alter table if exists public.ks_app_settings
   add column if not exists bfi_usd_multiplier numeric not null default 1,
   add column if not exists bfi_rmb_multiplier numeric not null default 1;
-
 create table if not exists public.ks_products_bfi(
   id text primary key,
   model text not null unique,
@@ -32,14 +30,12 @@ create table if not exists public.ks_products_bfi(
   rarity_rmb_3ph text not null default 'common',
   updated_at timestamptz not null default now()
 );
-
 alter table public.ks_products_bfi enable row level security;
 drop policy if exists ks_products_bfi_read on public.ks_products_bfi;
 create policy ks_products_bfi_read on public.ks_products_bfi for select to authenticated
 using (exists(select 1 from public.ks_user_access ua where lower(coalesce(ua.email,''))=lower(coalesce(auth.jwt()->>'email','')) and coalesce(ua.active,true)=true));
 revoke all on public.ks_products_bfi from anon;
 grant select on public.ks_products_bfi to authenticated;
-
 insert into public.ks_products_bfi(id,model,source_row,has_1ph,has_3ph,price_myr_1ph,price_myr_3ph,price_usd_1ph,price_usd_3ph,price_rmb_1ph,price_rmb_3ph)
 values
   ('bfi-1-2','BFI 1-2',4,true,true,0,0,0,0,0,0),
@@ -106,7 +102,6 @@ values
   ('bfi-20-3','BFI 20-3',65,false,true,0,0,0,0,0,0),
   ('bfi-20-4','BFI 20-4',66,false,true,0,0,0,0,0,0)
 on conflict(model) do update set source_row=excluded.source_row,has_1ph=excluded.has_1ph,has_3ph=excluded.has_3ph,source_workbook='010 - BFI - (Pricelist) - 260906 - V1.0.xlsx';
-
 create or replace function public.keysuite_save_bfi_product_price_v42302(
   p_product_id text,p_currency text,p_price_1ph numeric,p_price_3ph numeric,p_rarity_1ph text,p_rarity_3ph text
 ) returns boolean language plpgsql security definer set search_path=public,auth as $$
@@ -133,7 +128,6 @@ begin
 end $$;
 revoke all on function public.keysuite_save_bfi_product_price_v42302(text,text,numeric,numeric,text,text) from public,anon;
 grant execute on function public.keysuite_save_bfi_product_price_v42302(text,text,numeric,numeric,text,text) to authenticated;
-
 create or replace function public.keysuite_save_bfi_multiplier_v42302(p_currency text,p_multiplier numeric)
 returns boolean language plpgsql security definer set search_path=public,auth as $$
 declare v_email text:=lower(trim(coalesce(auth.jwt()->>'email','')));v_cur text:=upper(trim(coalesce(p_currency,'')));v_count integer:=0;
@@ -146,7 +140,6 @@ begin
 end $$;
 revoke all on function public.keysuite_save_bfi_multiplier_v42302(text,numeric) from public,anon;
 grant execute on function public.keysuite_save_bfi_multiplier_v42302(text,numeric) to authenticated;
-
 create or replace function public.keysuite_save_oem_series_mapping_v41503(p_mapping jsonb)
 returns jsonb
 language plpgsql
@@ -265,10 +258,8 @@ begin
   );
 end
 $$;
-
 revoke all on function public.keysuite_save_oem_series_mapping_v41503(jsonb) from public,anon;
 grant execute on function public.keysuite_save_oem_series_mapping_v41503(jsonb) to authenticated;
-
 create or replace function public.keysuite_save_category_currency_selection_v41511(p_category_id text,p_product_code text,p_currencies jsonb)
 returns boolean language plpgsql security definer set search_path=public,auth as $$
 declare
@@ -290,7 +281,6 @@ begin
 end $$;
 revoke all on function public.keysuite_save_category_currency_selection_v41511(text,text,jsonb) from public,anon;
 grant execute on function public.keysuite_save_category_currency_selection_v41511(text,text,jsonb) to authenticated;
-
 create or replace function public.keysuite_v41801_customer_price_assignment(
   p_user_email text,
   p_customer_id text,
@@ -472,15 +462,12 @@ begin
   );
 end;
 $$;
-
 revoke all on function public.keysuite_v41801_customer_price_assignment(text,text,text,text)
   from public,anon,authenticated;
 grant execute on function public.keysuite_v41801_customer_price_assignment(text,text,text,text)
   to service_role;
-
 comment on function public.keysuite_v41801_customer_price_assignment(text,text,text,text)
 is 'V4.18.01 KeyAI service-role gate: follows the exact Customer Brand / Series Price Preference from V4.17.10.';
-
 create or replace function public.keysuite_v41802_keybot_available_products(
   p_user_email text,
   p_customer_id text
@@ -674,14 +661,11 @@ begin
   );
 end;
 $$;
-
 revoke all on function public.keysuite_v41802_keybot_available_products(text,text)
   from public,anon,authenticated;
 grant execute on function public.keysuite_v41802_keybot_available_products(text,text)
   to service_role;
-
 comment on function public.keysuite_v41802_keybot_available_products(text,text)
 is 'V4.23.02 KeyBot Product: saved Role use_product full/all = all user products; assigned scope intersects Role Brand Assigned; Customer Price Preference filters products; includes independent BFI.';
-
 notify pgrst,'reload schema';
 commit;
