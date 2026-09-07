@@ -186,7 +186,7 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
 @media(max-width:600px){.brand-wrap{flex-wrap:wrap}.keysuite-header-actions{width:100%;margin-left:0;justify-content:flex-end}.keysuite-add-action{min-width:92px;padding:9px 11px;font-size:12px}.mobile-export-btn{display:none!important}}
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px){.brand-wrap{flex-wrap:nowrap!important}.keysuite-header-actions{width:auto!important;margin-left:auto!important}}
 </style>
-<script src="../pdf-optimization.js?v=42319"></script>
+<script src="../pdf-optimization.js?v=42320"></script>
 </head>
 <body>
 <header>
@@ -196,7 +196,7 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
       <h1>KeyCHC <span>- CHC Series</span></h1>
       <p>Database Version: 260717 · KeyCHC V3.4.7 · KeySuite V4.03.00</p>
     </div>
-    <div class="keysuite-header-actions"><button id="keysuitePdf" class="keysuite-add-action keysuite-action-pdf" type="button">PDF</button><label class="keysuite-pdf-optimize-header"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label><button id="keysuiteAddToAssembly" class="keysuite-add-action keysuite-action-assembly" type="button">Assembly</button><button id="keysuiteAddToQuotation" class="keysuite-add-action keysuite-action-quote" type="button">Quote</button></div>
+    <div class="keysuite-header-actions"><button id="keysuitePdf" class="keysuite-add-action keysuite-action-pdf" type="button">PDF</button><button id="keysuiteAddToAssembly" class="keysuite-add-action keysuite-action-assembly" type="button">Assembly</button><button id="keysuiteAddToQuotation" class="keysuite-add-action keysuite-action-quote" type="button">Quote</button></div>
   </div>
 </header>
 <main>
@@ -257,7 +257,6 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
       </div>
       <div class="setting-title">PDF Page 1</div>
       <label class="pdf-follow"><input id="pdfFollowScreen" type="checkbox" checked>Follow Selector Screen Settings</label>
-      <label class="pdf-follow"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label>
       <div class="display-save-actions"><button id="saveChcProductDisplay" class="save-display" type="button">Save Display Settings</button><button id="resetChcProductDisplay" class="reset-display" type="button">Reset to Default</button><span id="chcProductDisplaySaveStatus" class="display-save-status"></span></div>
     </div>
   </details>
@@ -1236,7 +1235,7 @@ function exportPDF(requestedFilename){
   </div>
   </div>
  </section>
- <script src="../pdf-optimization.js?v=42319"><\/script>
+ <script src="../pdf-optimization.js?v=42320"><\/script>
  <script>
 const __KEYSUITE_LOCKED_PDF_TITLE__=${JSON.stringify(pdfFileTitle)};
 function __keysuiteLockPdfTitle(){try{document.title=__KEYSUITE_LOCKED_PDF_TITLE__;window.__KEYSUITE_PDF_FILE_TITLE__=__KEYSUITE_LOCKED_PDF_TITLE__;if(window.frameElement){window.frameElement.name=__KEYSUITE_LOCKED_PDF_TITLE__;window.frameElement.title=__KEYSUITE_LOCKED_PDF_TITLE__;}}catch(_){}}

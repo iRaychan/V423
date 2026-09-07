@@ -1,10 +1,10 @@
-# KeySuite V4.23.19 FULL CLEAN
+# KeySuite V4.23.20 FULL CLEAN
 
-Complete KeySuite release tree based on V4.23.18.
+Complete KeySuite release tree.
 
-## V4.23.19
-- Product / Selector PDF toolbars now show a clearly visible **Optimized PDF** checkbox beside the blue PDF button for CHC C4, CHC C6, BFI and ES.
-- The inline Product Curve toolbar also shows **Optimized PDF** without clipping and retains the existing reversible PDF optimization preference.
-- Quotation History is sorted **newest quotation first** by creation timestamp, with update timestamp and quotation number used as tie-breakers.
+## V4.23.20
+- Moved the global Optimized PDF preference into User Settings.
+- Optimized PDF now defaults OFF on V4.23.20 and Product/Selector PDF toolbars are restored to PDF / Assembly / Quote.
+- Quotation History is forced newest-first at final render, using the visible quotation Date first and quotation number/revision as tie-breakers.
 
-See `README_UPGRADE_V42319.md` for deployment details.
+See `README_UPGRADE_V42320.md` for deployment details.

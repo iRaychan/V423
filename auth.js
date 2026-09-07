@@ -331,6 +331,7 @@
     if(!session||!profile)return;
     settingsMessage('');el('settingsDisplayName').value=profile.display_name||'';el('settingsDesignation').value=profile.designation||'';el('settingsPhone').value=profile.phone||'';el('settingsEmail').value=profile.email||'';el('settingsSignatoryName').value=profile.signatory_name||profile.display_name||'';
     pendingSignatureData=profile.signature_image||'';removeSignatureRequested=false;el('settingsSignatureUpload').value='';renderSignaturePreview();
+    const pdfOptimized=el('settingsPdfOptimized');if(pdfOptimized)pdfOptimized.checked=!!window.KeySuitePdfOptimization?.isEnabled?.();
     el('settingsCurrentPassword').value='';el('settingsNewPassword').value='';el('settingsConfirmPassword').value='';el('settingsDialog').showModal();
   }
   function renderSignaturePreview(){
@@ -403,6 +404,7 @@
       const sessionResult=await client.auth.getSession();if(sessionResult.data?.session)session=sessionResult.data.session;
       const saved=Array.isArray(profileRows)?profileRows[0]:profileRows||{};
       pendingSignatureData=signatureImage;removeSignatureRequested=false;applyProfile({...profile,...saved,display_name:displayName,designation,phone,signatory_name:signatoryName,signature_image:signatureImage});
+      const pdfOptimized=el('settingsPdfOptimized');if(pdfOptimized)window.KeySuitePdfOptimization?.setEnabled?.(!!pdfOptimized.checked);
       el('settingsPhone').value=phone;el('settingsCurrentPassword').value='';el('settingsNewPassword').value='';el('settingsConfirmPassword').value='';
       settingsMessage(changingPassword?'Profile and password updated.':'Profile and signatory updated.','info');
       setTimeout(closeSettings,700);

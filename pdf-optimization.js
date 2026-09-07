@@ -1,7 +1,7 @@
-/* KeySuite V4.23.19 reversible PDF image optimization. Source assets are never modified. */
+/* KeySuite V4.23.20 reversible PDF image optimization. Source assets are never modified. */
 (()=>{
   'use strict';
-  const STORAGE_KEY='keysuite_pdf_optimized_v42318';
+  const STORAGE_KEY='keysuite_pdf_optimized_v42320';
   const cache=new Map();
 
   function isEnabled(){
@@ -10,8 +10,8 @@
       if(query==='0'||query==='false')return false;
       if(query==='1'||query==='true')return true;
       const raw=localStorage.getItem(STORAGE_KEY);
-      return raw===null?true:raw!=='0';
-    }catch(_){return true}
+      return raw===null?false:raw==='1';
+    }catch(_){return false}
   }
   function setEnabled(value){
     const enabled=!!value;
@@ -92,7 +92,7 @@
   }
   function labelHtml(){return '<label class="keysuite-pdf-optimize-label"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label>'}
 
-  const api={version:'4.23.19',storageKey:STORAGE_KEY,isEnabled,setEnabled,syncCheckboxes,optimizeDocument,labelHtml};
+  const api={version:'4.23.20',storageKey:STORAGE_KEY,isEnabled,setEnabled,syncCheckboxes,optimizeDocument,labelHtml};
   window.KeySuitePdfOptimization=api;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>syncCheckboxes(),{once:true});
   else syncCheckboxes();

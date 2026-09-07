@@ -412,7 +412,14 @@ function historyPeriodSummary(){const values=checkedHistoryPeriods(),summary=$('
 function quotationHistoryFilters(){return {periods:checkedHistoryPeriods(),customer:String($('historyCustomer')?.value||'').trim().toLowerCase(),user:canManageQuotationHistory()?String($('historyUser')?.value||'').trim().toLowerCase():currentEmail()}}
 function quotationHistoryTimestamp(q){const raw=q?.createdAt||q?.created_at||q?.updatedAt||q?.updated_at||q?.date||'';const value=Date.parse(raw);return Number.isFinite(value)?value:0}
 function quotationHistoryUpdatedTimestamp(q){const raw=q?.updatedAt||q?.updated_at||q?.createdAt||q?.created_at||q?.date||'';const value=Date.parse(raw);return Number.isFinite(value)?value:0}
-function compareQuotationHistoryNewest(a,b){const createdDiff=quotationHistoryTimestamp(b)-quotationHistoryTimestamp(a);if(createdDiff)return createdDiff;const updatedDiff=quotationHistoryUpdatedTimestamp(b)-quotationHistoryUpdatedTimestamp(a);if(updatedDiff)return updatedDiff;return String(b?.no||'').localeCompare(String(a?.no||''),undefined,{numeric:true,sensitivity:'base'})}
+function quotationHistoryDateTimestamp(q){const raw=String(q?.date||'').slice(0,10);const value=Date.parse(raw?`${raw}T00:00:00Z`:'');return Number.isFinite(value)?value:0}
+function compareQuotationHistoryNewest(a,b){
+ const dateDiff=quotationHistoryDateTimestamp(b)-quotationHistoryDateTimestamp(a);if(dateDiff)return dateDiff;
+ const noDiff=canonicalQuotationNumber(b?.no).localeCompare(canonicalQuotationNumber(a?.no),undefined,{numeric:true,sensitivity:'base'});if(noDiff)return noDiff;
+ const revisionDiff=Number(b?.revisionNumber||quoteRevisionNumberFromNo(b?.no)||0)-Number(a?.revisionNumber||quoteRevisionNumberFromNo(a?.no)||0);if(revisionDiff)return revisionDiff;
+ const createdDiff=quotationHistoryTimestamp(b)-quotationHistoryTimestamp(a);if(createdDiff)return createdDiff;
+ return quotationHistoryUpdatedTimestamp(b)-quotationHistoryUpdatedTimestamp(a)
+}
 function filteredQuotes(rows=quotes()){
  const filter=quotationHistoryFilters();return rows.filter(q=>{const period=String(q.date||'').slice(0,7),customer=quoteDisplayCustomerName(q).toLowerCase(),creator=quoteCreatorEmail(q);return (!filter.periods.length||filter.periods.includes(period))&&(!filter.customer||customer.includes(filter.customer))&&(!filter.user||creator===filter.user)}).slice().sort(compareQuotationHistoryNewest)
 }
@@ -1224,10 +1231,10 @@ function newQuote(){
 }
 function quoteDisplayCustomerName(q){return q.printedCompany||q.customerName||q.customer_name||q.company||customerName(q.customerId)||q.pricingCustomerSnapshot?.company||customerName(q.pricingCustomerId)||''}
 function refreshQuotes(){
- const all=quotes();populateQuotationHistoryFilters(all);const arr=filteredQuotes(all),showUser=canManageQuotationHistory(),userHead=$('historyUserHead');if(userHead)userHead.style.display=showUser?'table-cell':'none';
+ const all=quotes();populateQuotationHistoryFilters(all);const arr=filteredQuotes(all).slice().sort(compareQuotationHistoryNewest),showUser=canManageQuotationHistory(),userHead=$('historyUserHead');if(userHead)userHead.style.display=showUser?'table-cell':'none';
  $('quoteRows').innerHTML=arr.map(q=>{const itemCount=q.items?.length||1,userCell=showUser?`<td>${esc(quoteCreatorName(q))}</td>`:'',sealed=String(q.status||'').toLowerCase()==='sealed',pdf=sealed?`<button class="btn quotation-history-pdf" data-pdf-q="${q.id}" title="PDF — sealed quotation">PDF</button>`:'';return `<tr><td>${esc(q.no)}</td><td>${esc(q.date)}</td><td>${esc(q.documentType||'Quotation')}</td><td>${esc(quoteDisplayCustomerName(q))}</td>${userCell}<td>${itemCount}</td><td>${money(q.total)}</td><td><div class="quotation-history-actions"><span class="quotation-history-pdf-slot">${pdf}</span><button class="btn secondary" data-open-q="${q.id}">Open</button><button class="btn danger" data-del-q="${q.id}">Delete</button></div></td></tr>`}).join('')||`<tr><td colspan="${showUser?8:7}" class="muted">No quotations match the selected filters.</td></tr>`;
  document.querySelectorAll('[data-open-q]').forEach(b=>b.onclick=()=>loadQuote(b.dataset.openQ));document.querySelectorAll('[data-pdf-q]').forEach(b=>b.onclick=()=>openHistoryQuotationPdf(b.dataset.pdfQ));document.querySelectorAll('[data-del-q]').forEach(b=>b.onclick=()=>deleteQuote(b.dataset.delQ));
- $('recentQuotes').innerHTML=all.slice(0,5).map(q=>{const first=q.items?.[0]?.model||q.model||'';return `<tr><td>${esc(q.no)}</td><td>${esc(quoteDisplayCustomerName(q))}</td><td>${esc(first)}</td><td>${money(q.total)}</td><td>${esc(q.documentType||'Quotation')}</td></tr>`}).join('')||'<tr><td colspan="5" class="muted">No quotations yet.</td></tr>';
+ $('recentQuotes').innerHTML=all.slice().sort(compareQuotationHistoryNewest).slice(0,5).map(q=>{const first=q.items?.[0]?.model||q.model||'';return `<tr><td>${esc(q.no)}</td><td>${esc(quoteDisplayCustomerName(q))}</td><td>${esc(first)}</td><td>${money(q.total)}</td><td>${esc(q.documentType||'Quotation')}</td></tr>`}).join('')||'<tr><td colspan="5" class="muted">No quotations yet.</td></tr>';
  if($('mCustomers'))$('mCustomers').textContent=customers().length;if($('mQuotes'))$('mQuotes').textContent=all.length;if($('mValue'))$('mValue').textContent=money(all.reduce((sum,q)=>sum+q.total,0));if($('mPending'))$('mPending').textContent=all.length;renderQuotationHistoryNotice();
 }
 
