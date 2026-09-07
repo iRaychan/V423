@@ -176,16 +176,17 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 <link rel="icon" type="image/png" href="favicon.png">
 <style id="keysuite-v382-bridge-style">
 /* KeySuite V3.8.9 integration bridge */
-.keysuite-header-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.keysuite-header-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .keysuite-add-action{width:auto;min-width:118px;padding:10px 16px;border:0;border-radius:9px;color:#fff;font-weight:800;white-space:nowrap;cursor:pointer}
 .keysuite-action-pdf{background:#0877bd}.keysuite-action-assembly{background:#f59e0b}.keysuite-action-quote{background:#16a34a}
 .keysuite-add-action:active{transform:translateY(1px)}
+.keysuite-pdf-optimize-header{display:inline-flex!important;align-items:center!important;gap:6px!important;height:38px!important;margin:0!important;padding:0 9px!important;border:1px solid #cfdbe4!important;border-radius:8px!important;background:#fff!important;color:#31546d!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important}.keysuite-pdf-optimize-header input{width:auto!important;margin:0!important;accent-color:#0877bd}
 body.product-frame header,body.product-frame aside.inputs,body.product-frame #alternativesCard{display:none!important}
 body.product-frame main{display:block;max-width:none;padding:8px}body.product-frame .result-area{display:block}body.product-frame #out{min-height:0}body.product-frame .curve-grid{grid-template-columns:minmax(0,1.55fr) minmax(310px,1fr);align-items:stretch}body.product-frame .curve-grid>.chart-main{height:554px;display:flex;flex-direction:column;overflow:hidden}body.product-frame .chart-stack{grid-template-rows:repeat(3,178px);gap:10px}body.product-frame .chart-stack>.chart-card{height:178px;display:flex;flex-direction:column;overflow:hidden}body.product-frame .chart-card svg{flex:1 1 auto;width:100%;height:100%;min-height:0;aspect-ratio:auto!important}@media(max-width:900px){body.product-frame .curve-grid{grid-template-columns:1fr}body.product-frame .curve-grid>.chart-main{height:520px}body.product-frame .chart-stack{grid-template-rows:repeat(3,178px)}}
 @media(max-width:600px){.brand-wrap{flex-wrap:wrap}.keysuite-header-actions{width:100%;margin-left:0;justify-content:flex-end}.keysuite-add-action{min-width:92px;padding:9px 11px;font-size:12px}.mobile-export-btn{display:none!important}}
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px){.brand-wrap{flex-wrap:nowrap!important}.keysuite-header-actions{width:auto!important;margin-left:auto!important}}
 </style>
-<script src="../pdf-optimization.js?v=42318"></script>
+<script src="../pdf-optimization.js?v=42319"></script>
 </head>
 <body>
 <header>
@@ -195,7 +196,7 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
       <h1>KeyCHC <span>- CHC Series</span></h1>
       <p>Database Version: 260717 · KeyCHC V3.4.7 · KeySuite V4.03.00</p>
     </div>
-    <div class="keysuite-header-actions"><button id="keysuitePdf" class="keysuite-add-action keysuite-action-pdf" type="button">PDF</button><button id="keysuiteAddToAssembly" class="keysuite-add-action keysuite-action-assembly" type="button">Assembly</button><button id="keysuiteAddToQuotation" class="keysuite-add-action keysuite-action-quote" type="button">Quote</button></div>
+    <div class="keysuite-header-actions"><button id="keysuitePdf" class="keysuite-add-action keysuite-action-pdf" type="button">PDF</button><label class="keysuite-pdf-optimize-header"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label><button id="keysuiteAddToAssembly" class="keysuite-add-action keysuite-action-assembly" type="button">Assembly</button><button id="keysuiteAddToQuotation" class="keysuite-add-action keysuite-action-quote" type="button">Quote</button></div>
   </div>
 </header>
 <main>
@@ -1235,7 +1236,7 @@ function exportPDF(requestedFilename){
   </div>
   </div>
  </section>
- <script src="../pdf-optimization.js?v=42318"><\/script>
+ <script src="../pdf-optimization.js?v=42319"><\/script>
  <script>
 const __KEYSUITE_LOCKED_PDF_TITLE__=${JSON.stringify(pdfFileTitle)};
 function __keysuiteLockPdfTitle(){try{document.title=__KEYSUITE_LOCKED_PDF_TITLE__;window.__KEYSUITE_PDF_FILE_TITLE__=__KEYSUITE_LOCKED_PDF_TITLE__;if(window.frameElement){window.frameElement.name=__KEYSUITE_LOCKED_PDF_TITLE__;window.frameElement.title=__KEYSUITE_LOCKED_PDF_TITLE__;}}catch(_){}}

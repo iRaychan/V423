@@ -1,4 +1,4 @@
-/* KeySuite V4.23.18 reversible PDF image optimization. Source assets are never modified. */
+/* KeySuite V4.23.19 reversible PDF image optimization. Source assets are never modified. */
 (()=>{
   'use strict';
   const STORAGE_KEY='keysuite_pdf_optimized_v42318';
@@ -92,7 +92,7 @@
   }
   function labelHtml(){return '<label class="keysuite-pdf-optimize-label"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label>'}
 
-  const api={version:'4.23.18',storageKey:STORAGE_KEY,isEnabled,setEnabled,syncCheckboxes,optimizeDocument,labelHtml};
+  const api={version:'4.23.19',storageKey:STORAGE_KEY,isEnabled,setEnabled,syncCheckboxes,optimizeDocument,labelHtml};
   window.KeySuitePdfOptimization=api;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>syncCheckboxes(),{once:true});
   else syncCheckboxes();
