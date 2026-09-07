@@ -55,7 +55,23 @@
   function getGlobalOptions(){return {...globalOptions}}
   function syncOptionControls(){document.querySelectorAll('[data-manifold-option]').forEach(input=>{const key=input.dataset.manifoldOption;if(Object.prototype.hasOwnProperty.call(globalOptions,key))input.checked=!!globalOptions[key]})}
   function setGlobalOptions(value={},meta={}){const next=normalizeOptions(value),changed=Object.keys(OPTION_DEFAULTS).some(key=>next[key]!==globalOptions[key]);globalOptions=next;syncOptionControls();if(changed&&!meta.silent){try{window.dispatchEvent(new CustomEvent('keysuite-manifold-options-changed',{detail:{options:getGlobalOptions(),source:meta.source||'manifold'}}))}catch(_){}}return getGlobalOptions()}
-  function optionLines(options){const o=normalizeOptions(options),lines=[];if(o.suctionStrainer)lines.push('Strainer on suction port of each pump');if(o.suctionFlexible)lines.push('Flexible connector on suction port of each pump');if(o.dischargeFlexible)lines.push('Flexible connector on discharge port of each pump');return lines}
+  function systemDescriptionLines(options){
+    const o=normalizeOptions(options),lines=[],bothFlexible=o.suctionFlexible&&o.dischargeFlexible;
+    if(bothFlexible){
+      lines.push('Gate valves and flexible joints on the suction and discharge ports of each pump');
+      lines.push('Check valve on the discharge port of each pump');
+      if(o.suctionStrainer)lines.push('Strainer on the suction port of each pump');
+    }else{
+      lines.push('Gate valves on the suction and discharge ports of each pump');
+      if(o.suctionFlexible&&o.suctionStrainer)lines.push('Flexible joint and strainer on the suction port of each pump');
+      else if(o.suctionFlexible)lines.push('Flexible joint on the suction port of each pump');
+      else if(o.suctionStrainer)lines.push('Strainer on the suction port of each pump');
+      if(o.dischargeFlexible)lines.push('Check valve and flexible joint on the discharge port of each pump');
+      else lines.push('Check valve on the discharge port of each pump');
+    }
+    lines.push('1 pressure gauge on the discharge manifold');
+    return lines;
+  }
 
   function normalizeConnection(value){const code=String(value||'FLANGE_16').toUpperCase();if(code==='FLANGE_10')return 'FLANGE_16';return ['THREAD_8','FLANGE_16','FLANGE_25'].includes(code)?code:'FLANGE_16'}
   function priceConnection(value){return ({THREAD_8:'THREAD_10',FLANGE_16:'FLANGE_16',FLANGE_25:'FLANGE_25'})[normalizeConnection(value)]||'FLANGE_16'}
@@ -131,8 +147,8 @@
   function dnInches(value){const dn=dnNumber(value),map={15:'.5',20:'.75',25:'1',32:'1.25',40:'1.5',50:'2',65:'2.5',80:'3',100:'4',125:'5',150:'6',200:'8',250:'10',300:'12'};return map[dn]||String(Number((dn/25.4).toFixed(1))||'')}
   function description(found,options={}){
     const c=found.configuration,s=found.source,includeCw=!!options.includeCw,indent=includeCw?'\t\t':'',size=dnInches(s.manifoldDn);
-    const extras=optionLines(c.options).map(line=>`${indent}${line}`);
-    return [`${includeCw?'c/w\t':''}Baseplate in mild steel, ${c.material} manifold ${size}" inlet & ${size}" outlet`,`${indent}Gate valves on suction & discharge ports of each pump`,`${indent}Check valves on discharge ports of each pump`,...extras,`${indent}1 Pressure gauge on discharge ports`].join('\n');
+    const lines=systemDescriptionLines(c.options).map(line=>`${indent}${line}`);
+    return [`${includeCw?'c/w\t':''}Baseplate in mild steel, ${c.material} manifold ${size}" inlet & ${size}" outlet`,...lines].join('\n');
   }
   function itemFrom(found,options={}){
     const auto=!!options.auto,model=`Manifold ${dnInches(found.source.manifoldDn)}" · ${found.configuration.pumpQty} ${found.configuration.pumpQty===1?'Pump':'Pumps'} · ${connectionLabel(found.configuration.connection)}`;
