@@ -1,8 +1,8 @@
-# KeySuite V4.23.16 FULL CLEAN
+# KeySuite V4.23.17 FULL CLEAN
 
-V4.23.16 standardises the shared System manifold/accessory quotation wording across CHC, BFI, and all pump systems using the common System builder.
+V4.23.17 standardises the shared System manifold/accessory quotation wording across CHC, BFI, and all pump systems using the common System builder.
 
-## V4.23.16
+## V4.23.17
 
 - Shared System wording now uses grammatically consistent singular/plural port terminology.
 - Flexible joints are combined with suction/discharge accessory lines according to the selected BOM checkboxes.
