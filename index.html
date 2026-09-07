@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17365d">
-  <title>KeySuite V4.23.14</title>
+  <title>KeySuite V4.23.15</title>
   <link rel="manifest" href="manifest.json">
   <style>
     :root{--navy:#17365d;--blue:#2f75b5;--light:#eef3f8;--line:#cbd5e1;--text:#172033;--muted:#64748b;--ok:#15803d}
@@ -335,7 +335,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 
     /* V2.30 capacity rows, suggestion lists and aligned Assembly BOM controls */
     .quote-capacity-row,.assembly-capacity-row{display:grid;grid-template-columns:minmax(150px,.65fr) minmax(230px,1fr) 24px minmax(230px,1fr);gap:10px;align-items:end;margin-top:12px;padding:10px 12px;border:1px solid #dbe3ec;border-radius:9px;background:#f8fafc}.quote-capacity-toggle,.assembly-capacity-toggle{display:flex;align-items:center;gap:8px;min-height:42px;margin:0;font-weight:800}.quote-capacity-toggle input,.assembly-capacity-toggle input{width:auto}.capacity-input-pair{display:grid;grid-template-columns:minmax(90px,1fr) minmax(86px,.65fr);gap:7px}.capacity-input-pair input,.capacity-input-pair select{width:100%;height:42px}.capacity-at{height:42px;display:flex;align-items:center;justify-content:center;font-weight:900}.capacity-disabled{opacity:.68}.quote-capacity-row.capacity-disabled input:not([type=checkbox]),.quote-capacity-row.capacity-disabled select,.assembly-capacity-row.capacity-disabled input:not([type=checkbox]),.assembly-capacity-row.capacity-disabled select{background:#e2e8f0}
-    .assembly-capacity-row{margin:0 0 14px}.assembly-item{grid-template-columns:minmax(430px,1.45fr) 92px 132px 132px auto;align-items:start}.assembly-component-main>b{display:inline-block;min-height:20px}.assembly-item>div:nth-child(2),.assembly-item>div:nth-child(3),.assembly-item>div:nth-child(4){display:grid;grid-template-rows:18px 42px;gap:4px}.assembly-item>div:nth-child(2)>label,.assembly-item>div:nth-child(3)>label,.assembly-item>div:nth-child(4)>label{margin:0;line-height:18px;white-space:nowrap}.assembly-item>div:nth-child(2)>input,.assembly-item>div:nth-child(3)>input{height:42px;width:100%}.assembly-line-total{height:42px;display:flex;align-items:center;white-space:nowrap}.assembly-delete{margin-top:22px}.assembly-component-options,.assembly-keyplc-options,.assembly-motor-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:8px}.assembly-component-options .assembly-item-option,.assembly-keyplc-options .assembly-item-option,.assembly-motor-options .assembly-item-option{display:grid;grid-template-rows:18px 38px;gap:4px;margin:0;min-width:0}.assembly-component-options .assembly-item-option label,.assembly-keyplc-options .assembly-item-option label,.assembly-motor-options .assembly-item-option label{margin:0;line-height:18px;white-space:nowrap;font-size:11px}.assembly-component-options .assembly-item-option select,.assembly-keyplc-options .assembly-item-option select,.assembly-motor-options .assembly-item-option select{width:100%;min-width:0;height:38px;padding:6px 8px}.assembly-coupling-bush-summary{grid-column:1/-1;position:relative;z-index:1;pointer-events:none;clear:both;padding-top:6px}.assembly-coupling-options{position:relative;z-index:2}.assembly-coupling-options select{position:relative;z-index:3;pointer-events:auto}.assembly-coupling-resolved-model,.assembly-coupling-resolved-arrangement{width:100%;min-width:0;height:42px!important;background:rgba(255,255,255,.72);font-weight:700}.assembly-coupling-resolved-note{margin:7px 0 0;padding:7px 9px;border-radius:7px;background:rgba(255,255,255,.55);font-size:11px;color:#31412a}.assembly-description-preview mark{padding:0 2px;border-radius:3px}
+    .assembly-capacity-row{margin:0 0 14px}.assembly-item{grid-template-columns:minmax(430px,1.45fr) 92px 132px 132px auto;align-items:start}.assembly-component-main>b{display:inline-block;min-height:20px}.assembly-item>div:nth-child(2),.assembly-item>div:nth-child(3),.assembly-item>div:nth-child(4){display:grid;grid-template-rows:18px 42px;gap:4px}.assembly-item>div:nth-child(2)>label,.assembly-item>div:nth-child(3)>label,.assembly-item>div:nth-child(4)>label{margin:0;line-height:18px;white-space:nowrap}.assembly-item>div:nth-child(2)>input,.assembly-item>div:nth-child(3)>input{height:42px;width:100%}.assembly-line-total{height:42px;display:flex;align-items:center;white-space:nowrap}.assembly-delete{margin-top:22px}.assembly-component-options,.assembly-keyplc-options,.assembly-motor-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:8px}.assembly-component-options .assembly-item-option,.assembly-keyplc-options .assembly-item-option,.assembly-motor-options .assembly-item-option{display:grid;grid-template-rows:18px 38px;gap:4px;margin:0;min-width:0}.assembly-component-options .assembly-item-option label,.assembly-keyplc-options .assembly-item-option label,.assembly-motor-options .assembly-item-option label{margin:0;line-height:18px;white-space:nowrap;font-size:11px}.assembly-component-options .assembly-item-option select,.assembly-keyplc-options .assembly-item-option select,.assembly-motor-options .assembly-item-option select{width:100%;min-width:0;height:38px;padding:6px 8px}.assembly-keyplc-phase-option .assembly-keyplc-check{height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer}.assembly-keyplc-phase-option .assembly-keyplc-check input{width:18px!important;height:18px!important;margin:0;accent-color:#17365d}.assembly-keyplc-phase-option .assembly-keyplc-check span{white-space:nowrap}.assembly-coupling-bush-summary{grid-column:1/-1;position:relative;z-index:1;pointer-events:none;clear:both;padding-top:6px}.assembly-coupling-options{position:relative;z-index:2}.assembly-coupling-options select{position:relative;z-index:3;pointer-events:auto}.assembly-coupling-resolved-model,.assembly-coupling-resolved-arrangement{width:100%;min-width:0;height:42px!important;background:rgba(255,255,255,.72);font-weight:700}.assembly-coupling-resolved-note{margin:7px 0 0;padding:7px 9px;border-radius:7px;background:rgba(255,255,255,.55);font-size:11px;color:#31412a}.assembly-description-preview mark{padding:0 2px;border-radius:3px}
     @media(max-width:1100px){.assembly-item{grid-template-columns:minmax(300px,1fr) 80px 110px 110px auto}.quote-capacity-row,.assembly-capacity-row{grid-template-columns:1fr 1fr}.capacity-at{display:none}}
     @media(max-width:720px){.quote-capacity-row,.assembly-capacity-row{grid-template-columns:1fr}.assembly-item{grid-template-columns:1fr}.assembly-item>div:nth-child(2),.assembly-item>div:nth-child(3),.assembly-item>div:nth-child(4){grid-template-columns:110px 1fr;grid-template-rows:42px;align-items:center}.assembly-delete{margin-top:0}.capacity-at{display:none}}
 
@@ -419,7 +419,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 .assembly-motor-hp.motor-hp-oversized{background:#94DCF8!important;border-color:#64b5d6!important;}
 
 
-    /* V4.23.14 — BFI Currency & Multipliers: strict shared-row label/control alignment. */
+    /* V4.23.15 — BFI Currency & Multipliers: strict shared-row label/control alignment. */
     #bfiPriceList .bfi-pricelist-settings{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;align-items:start!important}
     #bfiPriceList .bfi-pricelist-settings>div{display:grid!important;grid-template-rows:18px 42px auto!important;align-content:start!important;gap:4px!important;min-width:0;box-sizing:border-box!important;padding:9px!important;border:1px solid #dbe3ec!important;border-radius:9px!important;background:#f8fafc!important}
     #bfiPriceList .bfi-pricelist-settings>div>label{height:18px!important;line-height:18px!important;margin:0!important;align-self:start}
@@ -622,7 +622,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 <div id="loadingView" class="loading-screen hidden"><div class="loading-card"><div class="spinner"></div><div id="loadingText">Checking secure access…</div></div></div>
 <div id="appView" class="app hidden">
   <aside>
-    <div class="brand-row"><div class="brand">KeySuite<small>Full Suite V4.23.14</small></div><button id="keyButton" type="button" class="key-button" title="Open Key Dashboard" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l8-8m-2 2l2 2m-5 1l2 2"></path></svg><span>Key</span></button></div>
+    <div class="brand-row"><div class="brand">KeySuite<small>Full Suite V4.23.15</small></div><button id="keyButton" type="button" class="key-button" title="Open Key Dashboard" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l8-8m-2 2l2 2m-5 1l2 2"></path></svg><span>Key</span></button></div>
     <nav>
       <button data-page="dashboard" class="active">Dashboard</button>
       <button data-page="customers">Customers</button>
@@ -647,7 +647,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
       <button id="settingsButton" type="button" class="settings-button">⚙ Settings</button>
       <button id="logoutButton" type="button">Sign out</button>
     </div>
-    <div class="suite-version">KeySuite V4.23.14</div>
+    <div class="suite-version">KeySuite V4.23.15</div>
   </aside>
 
   <main>
@@ -817,7 +817,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
         <div><label>Supply</label><label id="bareShaftControl" class="default-choice-control"><input id="bareShaft" type="checkbox" data-default-checked="false"> Bare Shaft Pump</label></div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
-        <iframe id="selectorFrame" src="selector/index.html?v=42314" data-src="selector/index.html?v=42314" data-g2-src="selector/index.html?v=42314" data-g1-src="selector-g1/index.html?v=42314" title="KeySelector CHC C6 Series" style="width:100%;height:1900px;border:0;display:block"></iframe>
+        <iframe id="selectorFrame" src="selector/index.html?v=42315" data-src="selector/index.html?v=42315" data-g2-src="selector/index.html?v=42315" data-g1-src="selector-g1/index.html?v=42315" title="KeySelector CHC C6 Series" style="width:100%;height:1900px;border:0;display:block"></iframe>
       </div>
     </section>
 
@@ -830,7 +830,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 
     <section id="selectorBfi" class="page">
       <div class="page-title-row"><div><h1>Selector · BFI</h1><div class="muted">BFI horizontal multistage selector. Curve, duty-point selection, technical data, Quote and Assembly follow the same KeySuite workflow as CHC.</div></div><button id="quickSelectionReturnBfi" class="btn secondary quick-selection-return" type="button" hidden title="Return to Quick Selection" aria-label="Return to Quick Selection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l-5 5 5 5"></path><path d="M4 12h10a6 6 0 0 1 6 6"></path></svg></button></div>
-      <div class="card" style="padding:0;overflow:hidden"><iframe id="selectorBfiFrame" src="selector-bfi/index.html?v=42314" data-src="selector-bfi/index.html?v=42314" title="KeySelector BFI" style="width:100%;height:1900px;border:0;display:block"></iframe></div>
+      <div class="card" style="padding:0;overflow:hidden"><iframe id="selectorBfiFrame" src="selector-bfi/index.html?v=42315" data-src="selector-bfi/index.html?v=42315" title="KeySelector BFI" style="width:100%;height:1900px;border:0;display:block"></iframe></div>
     </section>
 
     <section id="productChc" class="page">
@@ -847,7 +847,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
         <div class="card"><h2>CHC Series</h2><div id="productSeriesList" class="product-series-list"></div></div>
         <div class="card"><div class="page-title-row" style="margin-bottom:12px"><div><h2 id="productSeriesTitle" style="margin:0">Models</h2><div id="productModelCount" class="muted"></div></div></div><div id="productModelGrid" class="product-model-grid"></div></div>
       </div>
-      <iframe id="productSelectorFrame" src="about:blank" data-src="selector/product.html?product=1&v=42314" data-g2-src="selector/product.html?product=1&v=42314" data-g1-src="selector-g1/product.html?product=1&v=42314" title="CHC Product Curve" style="display:none"></iframe>
+      <iframe id="productSelectorFrame" src="about:blank" data-src="selector/product.html?product=1&v=42315" data-g2-src="selector/product.html?product=1&v=42315" data-g1-src="selector-g1/product.html?product=1&v=42315" title="CHC Product Curve" style="display:none"></iframe>
     </section>
 
     <section id="productBfi" class="page">
@@ -859,7 +859,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
         <div><label>Elastomer</label><select id="bfiProductElastomer"><option selected>Viton</option><option>EPDM</option><option>NBR</option></select></div>
       </div>
       <div class="product-layout"><div class="card"><h2>BFI Series</h2><div id="bfiProductSeriesList" class="product-series-list"></div></div><div class="card"><div class="page-title-row" style="margin-bottom:12px"><div><h2 style="margin:0">BFI Models</h2><div id="bfiProductModelCount" class="muted"></div></div></div><div id="bfiProductModelGrid" class="product-model-grid"></div></div></div>
-      <iframe id="productBfiSelectorFrame" src="about:blank" data-src="selector-bfi/product.html?product=1&amp;v=42314" title="BFI Product Curve" style="display:none"></iframe>
+      <iframe id="productBfiSelectorFrame" src="about:blank" data-src="selector-bfi/product.html?product=1&amp;v=42315" title="BFI Product Curve" style="display:none"></iframe>
     </section>
 
     <section id="productGws" class="page">
@@ -1965,21 +1965,21 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="permissions.js?v=41707"></script>
-<script src="v40407-role-authority.js?v=42314"></script>
+<script src="v40407-role-authority.js?v=42315"></script>
 <script src="applications.js?v=409"></script>
-<script src="assembly.js?v=42314"></script>
-<script src="bfi-data-v42302.js?v=42314"></script>
-<script src="app.js?v=42314"></script>
-<script src="pricing.js?v=42314"></script>
+<script src="assembly.js?v=42315"></script>
+<script src="bfi-data-v42302.js?v=42315"></script>
+<script src="app.js?v=42315"></script>
+<script src="pricing.js?v=42315"></script>
 <script src="quotation-references.js?v=409"></script>
 <script src="categories.js?v=41700"></script>
-<script src="chc-g1-price-map-v41409.js?v=42314"></script>
+<script src="chc-g1-price-map-v41409.js?v=42315"></script>
 <script src="pricelist.js?v=414122"></script>
 <script src="chc-g1-product-data-v41411.js?v=42115"></script>
-<script src="product.js?v=42314"></script>
-<script src="bfi-v42302.js?v=42314"></script>
+<script src="product.js?v=42315"></script>
+<script src="bfi-v42302.js?v=42315"></script>
 <script src="manifold.js?v=41412"></script>
-<script src="roles.js?v=42314"></script>
+<script src="roles.js?v=42315"></script>
 <script src="motor.js?v=409"></script>
 <script src="coupling.js?v=409"></script>
 <script src="baseplate.js?v=409"></script>
@@ -2037,11 +2037,11 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     <div id="productCurveHost"></div>
   </div>
 </dialog>
-<script src="v394411-product-curve.js?v=42314" data-keysuite-loaded="1"></script>
+<script src="v394411-product-curve.js?v=42315" data-keysuite-loaded="1"></script>
 <script src="company-settings.js?v=41707"></script>
 <script src="keyai.js?v=41300"></script>
 <script src="keylab.js?v=41406"></script>
-<script src="auth.js?v=42314"></script>
+<script src="auth.js?v=42315"></script>
 <script src="v388-dashboard-keycore.js?v=409"></script>
 <script src="universe.js?v=41202"></script>
 <script src="v41223-selection-recovery.js?v=41300"></script>
@@ -2057,7 +2057,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     try{sessionStorage.setItem(STORAGE_KEY,generation)}catch(_){}
     const frame=document.getElementById('selectorFrame');
     if(frame){
-      const wanted=generation==='G1'?(frame.dataset.g1Src||'selector-g1/index.html?v=42314'):(frame.dataset.g2Src||frame.dataset.src||'selector/index.html?v=42314');
+      const wanted=generation==='G1'?(frame.dataset.g1Src||'selector-g1/index.html?v=42315'):(frame.dataset.g2Src||frame.dataset.src||'selector/index.html?v=42315');
       const current=String(frame.getAttribute('src')||'');
       const expectedPath=generation==='G1'?'selector-g1/index.html':'selector/index.html';
       if(!current.includes(expectedPath))frame.setAttribute('src',wanted);
@@ -2069,7 +2069,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
     if(hint)hint.textContent=`Select a CHC ${generation==='G1'?'C4':'C6'} pumpset, then use Assembly or Quote in the result panel.`;
     return generation;
   }
-  window.KeySuiteCHCSelection={version:'4.23.14',setGeneration,getGeneration:()=>generation};
+  window.KeySuiteCHCSelection={version:'4.23.15',setGeneration,getGeneration:()=>generation};
   document.addEventListener('click',event=>{
     const button=event.target.closest('button[data-page="selector"][data-generation]');
     if(button)setGeneration(button.dataset.generation);
@@ -2078,7 +2078,7 @@ aside::-webkit-scrollbar{width:0;height:0;display:none}
   else setGeneration(generation);
 })();
 </script>
-<script src="v41200-bootstrap.js?v=42314"></script>
+<script src="v41200-bootstrap.js?v=42315"></script>
 
 <script id="v41412-static-product-generation">
 document.addEventListener('click',event=>{
