@@ -1,13 +1,18 @@
-# KeySuite V4.23.12 FULL CLEAN
+# KeySuite V4.23.13 FULL CLEAN
 
-V4.23.12 makes KeyBot confirm BFI motor phase before finalising an exact BFI model identity.
+V4.23.13 refines BFI KeyBot phase handling and aligns BFI quotation wording with the CHC quotation style.
 
-## V4.23.12
+## V4.23.13
 
-- Direct BFI model requests now ask **1 Phase / 3 Phase** before the model is finalised.
-- 1 Phase resolves to the base model with no suffix, for example `BFI 10-3`.
-- 3 Phase resolves to the `T` suffix model, for example `BFI 10-3T`.
-- If an Enhanced BFI request is explicitly carried into the phase step, Enhanced remains 3 Phase only and resolves to the `E` suffix.
-- The same phase-confirmation rule is used for KeyBot Product exact-model selection and direct BFI price requests.
-- No database migration is required for V4.23.12.
-- `telegram-webhook` must be redeployed because KeyBot routing changed.
+- KeyBot BFI exact-model phase handling:
+  - If both 1Ph and 3Ph are available, KeyBot asks the user to choose.
+  - If only one phase is valid, KeyBot auto-selects it and continues without an unnecessary phase prompt.
+  - BFI base / T / E identity remains: 1Ph = base, 3Ph = T, 3Ph Enhanced = E.
+- KeySuite quotation:
+  - CHC frequency displays 50Hz instead of 50.0Hz.
+  - BFI uses CHC-style compact quotation wording.
+  - Default BFI material/seal line: Material: SS304 / Mechanical Seal.
+  - SiC/SiC: Material: SS304 / Mechanical Seal-SiC SiC Viton.
+  - Removed separate BFI Motor, Impellers, Mechanical Seal and Maximum Operating Pressure description rows.
+- No database migration is required for V4.23.13.
+- Redeploy `telegram-webhook` because KeyBot phase routing changed.

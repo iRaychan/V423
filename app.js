@@ -1317,7 +1317,7 @@ function chcAssemblyQuoteItem(p={}){
  const connectionType=p.keysuite_connection_type||$('connectionType')?.value||'round';
  const suctionDischarge=connectionType==='oval'?`${gMatch[0]||rawConnection.match(/\(([^)]+)\)/)?.[1]||'G'} x ${gMatch[0]||rawConnection.match(/\(([^)]+)\)/)?.[1]||'G'}`:`${dnMatch[0]||rawConnection.split('(')[0].trim()||'DN'} x ${dnMatch[0]||rawConnection.split('(')[0].trim()||'DN'}`;
  const hp=formatMotorHp(p.motor_hp);
- const frequencyText=enhanced?'60Hz':`${Number(p.frequency_hz||50).toFixed(1)}Hz`;
+ const frequencyText=enhanced?'60Hz':`${formatDutyNumber(Number(p.frequency_hz||50),1)}Hz`;
  const motorLine=`c/w\t${hp||'-'}HP 2Pole ${p.motor_efficiency_class||'IE3'} Motor (${p.motor_voltage||415}V / ${p.motor_phase||'3Ph'} / ${frequencyText})`;
  const materialLine=`${material} / ${chcSealDescription(seal,elastomer)}`;
  const dutyText=!p.product_mode&&hasDutyPoint(p)?quotationDutyText(p):'';
@@ -1469,7 +1469,7 @@ window.addEventListener('message',function(event){
    suctionDischarge=`${round} x ${round}`;
  }
  const hp=formatMotorHp(p.motor_hp);
- const frequencyText=enhanced?'60Hz':`${Number(p.frequency_hz||50).toFixed(1)}Hz`;
+ const frequencyText=enhanced?'60Hz':`${formatDutyNumber(Number(p.frequency_hz||50),1)}Hz`;
  const motorLine=`c/w\t${hp||'-'}HP 2Pole ${p.motor_efficiency_class||'IE3'} Motor (${p.motor_voltage||415}V / ${p.motor_phase||'3Ph'} / ${frequencyText})`;
  const materialLine=`${material} / ${chcSealDescription(seal,elastomer)}`;
  const dutyText=!p.product_mode&&hasDutyPoint(p)?quotationDutyText(p):'';

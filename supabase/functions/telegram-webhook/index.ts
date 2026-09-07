@@ -550,7 +550,7 @@ function smartQuoteRequest(text:any){
   const normalized=raw.toLowerCase().replace(/³/g,'3').replace(/m3\s*[.]\s*(?:hr|h)\b/g,'m3/hr').replace(/m3\s*(?:per|\\)\s*(?:hr|h)\b/g,'m3/hr');
   const request:any={raw_input:raw};
   const family=quoteFamilyFromText(raw);if(family)request.family_code=family;
-  const directModel=parseDirectPumpModel(raw);if(directModel){request.direct_model=directModel.model;request.family_code=directModel.family;request.product_type='pump';}
+  const directModel=parseDirectPumpModel(raw);if(directModel){request.direct_model=directModel.model;request.family_code=directModel.family;request.product_type='pump';if(directModel.family==='BFI'){const phases=bfiAvailablePhases(directModel.model);if(phases.length===1)Object.assign(request,bfiDirectRequestForPhase({...request,bfi_requested_enhanced:/E$/i.test(String(directModel.model||''))},phases[0]));}}
   const keyplc=parseKeyplcSystemRequest(raw);if(keyplc){Object.assign(request,keyplc);request.product_type='keyplc_system';}
   const tankIntent=!keyplc&&/\b(?:gws|tank|pressure\s*(?:tank|vessel))\b/i.test(raw);
   const pumpIntent=!keyplc&&!tankIntent&&(!!family||!!directModel||/\bpump\b/i.test(raw)||/@/.test(raw)||/\bm3\s*\/?\s*(?:h|hr)\b/i.test(normalized));
@@ -988,7 +988,14 @@ function guidedExactActionText(customer:any,product:any,exact:any){
 async function guidedSaveExactCatalogChoice(service:any,telegramToken:string,companyId:string,chatId:string,senderId:string,session:any,customer:any,product:any,path:any[],selected:any,context:any){
   const exact=guidedCatalogExactChoice(selected),group=String(product?.price_group||'').toUpperCase();
   if(group==='BFI'){
-    const requestedEnhanced=/E$/i.test(String(exact.master_model||exact.display_model||'')),pendingExact={...exact,master_model:bfiBaseModelName(exact.master_model),display_model:bfiBaseModelName(exact.display_model||exact.master_model),bfi_requested_enhanced:requestedEnhanced,bfi_phase_confirmed:false};
+    const requestedEnhanced=/E$/i.test(String(exact.master_model||exact.display_model||'')),base=bfiBaseModelName(exact.master_model),phases=bfiAvailablePhases(base);
+    if(phases.length===1){
+      const phase=phases[0],enhanced=phase==='3Ph'&&requestedEnhanced,finalExact={...exact,master_model:bfiPhaseModelName(base,phase,enhanced),display_model:bfiPhaseModelName(exact.display_model||base,phase,enhanced),motor_phase:phase,bfi_phase_confirmed:true,bfi_requested_enhanced:enhanced,enhanced,enhanced_curve:enhanced};
+      const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'guided',step:'guided_exact_model_action',selected_customer_id:String(customer?.id||'')||null,context:{...context,guided_product:product,guided_catalog_path:path,guided_catalog_choices:null,guided_exact_model:finalExact}});
+      await telegramSend(telegramToken,chatId,guidedExactActionText(customer,product,finalExact),guidedExactActionMenu(product.has_curve===true,false));
+      return saved||session;
+    }
+    const pendingExact={...exact,master_model:base,display_model:bfiBaseModelName(exact.display_model||exact.master_model),bfi_requested_enhanced:requestedEnhanced,bfi_phase_confirmed:false};
     const saved=await saveKeybotSession(service,companyId,chatId,senderId,{mode:'guided',step:'guided_bfi_waiting_phase',selected_customer_id:String(customer?.id||'')||null,context:{...context,guided_product:product,guided_catalog_path:path,guided_catalog_choices:null,guided_exact_model:pendingExact}});
     await telegramSend(telegramToken,chatId,`${customer?`Customer: ${customer.company_name}\n`:''}Product: ${guidedProductButtonLabel(product)}\nModel: ${pendingExact.display_model||pendingExact.master_model}\n\nChoose Motor Phase:`,bfiPhaseMenu(pendingExact.master_model));
     return saved||session;
@@ -2091,7 +2098,7 @@ Deno.serve(async(req)=>{
       return json({ok:true,status:'new_request'});
     }
 
-    // V4.23.12: BFI exact-model phase is always confirmed before the final model identity is used.
+    // V4.23.13: BFI exact-model phase is only asked when more than one valid phase exists; single-phase-choice models auto-continue.
     if(!callbackQuery&&session?.mode==='smart_curve'&&session?.step==='bfi_waiting_phase'&&text){
       const phase=bfiPhaseChoice(text),c=sessionContext(session),base=bfiBaseModelName(c.pending_request?.direct_model);if(!phase||!bfiAvailablePhases(base).includes(phase)){await telegramSend(telegramToken,chatId,`${phase?`${phase} is not available for ${base}.\n\n`:''}BFI Model: ${base}\n\nChoose Motor Phase:`,bfiPhaseMenu(base));return json({ok:true,status:'bfi_phase_waiting'})}
       const next=bfiDirectRequestForPhase(c.pending_request||{},phase);session=await sendSimpleCurve(service,telegramToken,keySuiteCompanyId,chatId,senderId,session,next);return json({ok:true,status:'bfi_phase_selected',phase,model:next.direct_model});
