@@ -240,7 +240,7 @@ function syncAutomaticControlPanel(d=current){
  syncQuoteUnitPrice(d);
 }
 function pumpSeriesNumber(item){
- const p=item?.pumpData||{},text=String(p.series||p.quotation_model||p.model||item?.model||'');return Number((text.match(/CHC\s+(\d+)/i)||[])[1]||0)
+ const p=item?.pumpData||{},text=String(p.series||p.quotation_model||p.model||item?.model||'');return Number((text.match(/(?:CHC|BFI)\s+(\d+)/i)||[])[1]||0)
 }
 function dnFrom(value){return Number((String(value||'').match(/DN\s*(\d+)/i)||[])[1]||0)}
 const CHC_CONNECTION_DN={1:25,2:25,3:25,4:32,5:32,8:40,10:40,12:50,15:50,16:50,20:50,32:65,45:80,64:100,90:100,120:125,150:125,200:150};
@@ -278,7 +278,7 @@ function syncAutomaticManifold(d=current){
  Object.assign(item,normalizeItem({...item,...built,section:'manifold',qty:1,manifoldData,pricingSource:{...sourceObject(built),auto_sized_manifold:true}},'system'));
  placeAutomaticDescription(d,previous,item.description);const duplicates=(d.items||[]).filter(x=>x!==item&&autoComponent(x,'manifold'));duplicates.forEach(x=>{d.description=removeDescriptionBlock(d.description,x.description)});d.items=d.items.filter(x=>!duplicates.includes(x))
 }
-function tankLitresForSeries(series){const value=Number(series)||0;if(value>0&&value<=10)return 24;if(value>=12&&value<=28)return 35;if(value>=32&&value<=90)return 100;if(value>=120&&value<=150)return 200;if(value===200)return 300;return 0}
+function tankLitresForSeries(series){const value=Number(series)||0;if(value>0&&value<=10)return 24;if(value>=11&&value<=28)return 35;if(value>=32&&value<=90)return 100;if(value>=120&&value<=150)return 200;if(value===200)return 300;return 0}
 function autoGwsTankProduct(sizeLitres,minimumPressureBar=0){
  const size=Number(sizeLitres),minimum=Math.max(0,Number(minimumPressureBar)||0);if(!(size>0))return null;
  return (window.KEYSUITE_SECURE_DATA?.gwsProducts||[]).filter(product=>Number(product.sizeLitres||0)===size&&Number(product.pressureBar||0)>minimum+1e-9).sort((a,b)=>Number(a.pressureBar||0)-Number(b.pressureBar||0)||String(a.seriesCode||'').localeCompare(String(b.seriesCode||'')))[0]||null

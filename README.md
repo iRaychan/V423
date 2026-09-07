@@ -1,18 +1,15 @@
-# KeySuite V4.23.13 FULL CLEAN
+# KeySuite V4.23.14 FULL CLEAN
 
-V4.23.13 refines BFI KeyBot phase handling and aligns BFI quotation wording with the CHC quotation style.
+V4.23.14 makes BFI Product Assembly enter the complete System flow directly, matching CHC.
 
-## V4.23.13
+## V4.23.14
 
-- KeyBot BFI exact-model phase handling:
-  - If both 1Ph and 3Ph are available, KeyBot asks the user to choose.
-  - If only one phase is valid, KeyBot auto-selects it and continues without an unnecessary phase prompt.
-  - BFI base / T / E identity remains: 1Ph = base, 3Ph = T, 3Ph Enhanced = E.
-- KeySuite quotation:
-  - CHC frequency displays 50Hz instead of 50.0Hz.
-  - BFI uses CHC-style compact quotation wording.
-  - Default BFI material/seal line: Material: SS304 / Mechanical Seal.
-  - SiC/SiC: Material: SS304 / Mechanical Seal-SiC SiC Viton.
-  - Removed separate BFI Motor, Impellers, Mechanical Seal and Maximum Operating Pressure description rows.
-- No database migration is required for V4.23.13.
-- Redeploy `telegram-webhook` because KeyBot phase routing changed.
+- Product > BFI > Assembly now routes directly to the System builder.
+- Default BFI System starts with 2 pumps (1 Duty + 1 On Demand).
+- The KeyPLC control panel is auto-selected at Qty 1 from the BFI motor rating and pump quantity.
+- The manifold is auto-selected at Qty 1 from the BFI suction/discharge connection size and pump quantity.
+- The GWS tank is auto-selected at Qty 1 from BFI series and shut-off head.
+- BFI threaded connections are translated to the DN sizes used by the shared System sizing engine.
+- BFI base / T / E model identity is retained in the System BOM.
+- No database migration is required for V4.23.14.
+- No Telegram/KeyBot function change is required for V4.23.14.
