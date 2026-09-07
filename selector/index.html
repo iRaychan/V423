@@ -180,6 +180,7 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
 @media(max-width:600px){.brand-wrap{flex-wrap:wrap}.keysuite-header-actions{width:100%;margin-left:0;justify-content:flex-end}.keysuite-add-action{min-width:92px;padding:9px 11px;font-size:12px}.mobile-export-btn{display:none!important}}
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px){.brand-wrap{flex-wrap:nowrap!important}.keysuite-header-actions{width:auto!important;margin-left:auto!important}}
 </style>
+<script src="../pdf-optimization.js?v=42318"></script>
 </head>
 <body>
 <header>
@@ -253,6 +254,7 @@ body.product-frame main{display:block;max-width:none;padding:8px}body.product-fr
       </div>
       <div class="setting-title">PDF Page 1</div>
       <label class="pdf-follow"><input id="pdfFollowScreen" type="checkbox" checked>Follow Selector Screen Settings</label>
+      <label class="pdf-follow"><input type="checkbox" data-keysuite-pdf-optimize>Optimized PDF</label>
       <div class="display-save-actions"><button id="saveChcDisplay" class="save-display" type="button">Save Display Settings</button><button id="resetChcDisplay" class="reset-display" type="button">Reset to Default</button><span id="chcDisplaySaveStatus" class="display-save-status"></span></div>
     </div>
   </details>
@@ -1156,6 +1158,7 @@ function exportPDF(requestedFilename){
   </div>
   </div>
  </section>
+ <script src="../pdf-optimization.js?v=42318"><\/script>
  <script>
 const __KEYSUITE_LOCKED_PDF_TITLE__=${JSON.stringify(pdfFileTitle)};
 function __keysuiteLockPdfTitle(){try{document.title=__KEYSUITE_LOCKED_PDF_TITLE__;}catch(_){}}
@@ -1196,6 +1199,9 @@ window.onload=async()=>{
       }
     }
   }catch(e){console.warn('Dimension table alignment:',e)}
+  let __keysuiteRestorePdfImages=()=>{};
+  try{const __pdfOpt=window.KeySuitePdfOptimization||(window.opener&&window.opener.KeySuitePdfOptimization);if(__pdfOpt)__keysuiteRestorePdfImages=await __pdfOpt.optimizeDocument(document,{profile:'datasheet'});}catch(e){console.warn('PDF optimization:',e)}
+  window.addEventListener('afterprint',()=>{try{__keysuiteRestorePdfImages()}catch(_){}},{once:true});
   setTimeout(()=>{__keysuiteLockPdfTitle();window.print();},700);
 };
 <\/script>

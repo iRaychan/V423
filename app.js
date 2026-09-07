@@ -1681,9 +1681,11 @@ async function printCompleteQuotation(options={}){
  document.querySelectorAll('#printQuotationDocument .print-company img,#printQuotationDocument .print-items-logo').forEach(img=>{if(!img.dataset.templateLogo)img.src=KEYLARGO_LOGO_DATA});
  const logoImages=[...document.querySelectorAll('#printQuotationDocument .print-company img,#printQuotationDocument .print-items-logo')];
  await Promise.all(logoImages.map(img=>img.decode?img.decode().catch(()=>{}):Promise.resolve()));
+ let restorePdfImages=()=>{};
+ try{if(window.KeySuitePdfOptimization)restorePdfImages=await window.KeySuitePdfOptimization.optimizeDocument(document.getElementById('printQuotationDocument'),{profile:'quotation'});}catch(error){console.warn('Quotation PDF optimization:',error)}
  const customer=$('qPrintedCompany')?.value.trim()||selectedQuotationCustomer()?.company||'';const pdfName=window.KeySuiteTemplates?.getPdfName?.({quoteNo:$('quoteNo').value||'Quotation',customer,date:$('qDate').value})||safePdfName($('quoteNo').value||'Quotation');
  restorePrintState();window.__ksOldTitle=document.title;document.title=safePdfName(pdfName);document.body.classList.add('print-complete');
- window.addEventListener('afterprint',()=>{document.body.classList.remove('print-complete');restorePrintState()},{once:true});
+ window.addEventListener('afterprint',()=>{try{restorePdfImages()}catch(_){}document.body.classList.remove('print-complete');restorePrintState()},{once:true});
  requestAnimationFrame(()=>setTimeout(()=>window.print(),80));
  setTimeout(()=>document.body.classList.remove('print-complete'),1800);
 }

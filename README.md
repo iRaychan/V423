@@ -1,16 +1,12 @@
-# KeySuite V4.23.17 FULL CLEAN
+# KeySuite V4.23.18 FULL CLEAN
 
-V4.23.17 standardises the shared System manifold/accessory quotation wording across CHC, BFI, and all pump systems using the common System builder.
+Complete KeySuite release tree based on the corrected V4.23.17 Full Clean.
 
-## V4.23.17
+## V4.23.18
+- Adds reversible **Optimized PDF** export, enabled by default.
+- Optimization is applied only to temporary/export raster images; original source assets are unchanged.
+- Text, tables, borders and SVG pump curves remain vector/sharp.
+- CHC C4/C6, BFI, ES Product/Selector PDFs and quotation PDFs share the same local optimization setting.
+- KeyBot curve PDF uses optimized report/logo/dimension assets by default while retaining original assets in source.
 
-- Shared System wording now uses grammatically consistent singular/plural port terminology.
-- Flexible joints are combined with suction/discharge accessory lines according to the selected BOM checkboxes.
-- Suction flexible + strainer: `Flexible joint and strainer on the suction port of each pump`.
-- Discharge flexible: `Check valve and flexible joint on the discharge port of each pump`.
-- Flexible on both suction and discharge: `Gate valves and flexible joints on the suction and discharge ports of each pump`.
-- Standard discharge wording: `Check valve on the discharge port of each pump`.
-- Pressure gauge wording is now `1 pressure gauge on the discharge manifold`.
-- The rule is shared globally by CHC, BFI, and future systems using the common manifold/System description generator.
-- No database migration is required.
-- No Telegram/KeyBot function redeployment is required.
+See `README_UPGRADE_V42318.md` for deployment details.

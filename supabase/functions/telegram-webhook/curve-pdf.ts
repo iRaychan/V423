@@ -9,6 +9,7 @@ import '../shared-bfi/bfi-selector-core.js';
 import { CHC_DIMENSIONS } from './chc-dimensions.ts';
 import { CHC_G1_DIMENSIONS } from './chc-g1-dimensions.ts';
 import { REPORT_LOGO_BASE64, ES_DIMENSION_BASE64, CHC_DIMENSION_BASE64 } from './report-assets.ts';
+import { REPORT_LOGO_JPEG_BASE64, ES_DIMENSION_JPEG_BASE64, CHC_DIMENSION_JPEG_BASE64 } from './report-assets-optimized.ts';
 import './es-core.js';
 import './es-data.js';
 import './motor-data.js';
@@ -122,6 +123,20 @@ async function embedPublicPng(pdf:any,baseUrl:any,relativePath:string){
   }
   throw new Error(`CHC C4 dimension drawing could not be loaded (${cleanPath}). ${errors.join(' | ')}`);
 }
+async function embedPublicJpg(pdf:any,baseUrl:any,relativePath:string){
+  const cleanPath=String(relativePath||'').replace(/^\/+/,''),errors:string[]=[];
+  for(const base of publicAssetBases(baseUrl)){
+    const url=`${base}/${cleanPath}${cleanPath.includes('?')?'&':'?'}v=42318`;
+    try{
+      const response=await fetch(url,{headers:{'Accept':'image/jpeg'}});
+      if(!response.ok){errors.push(`${response.status} ${url}`);continue}
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      if(bytes.length<4||bytes[0]!==0xff||bytes[1]!==0xd8){errors.push(`Not JPEG ${url}`);continue}
+      return await pdf.embedJpg(bytes);
+    }catch(error){errors.push(`${error instanceof Error?error.message:String(error)} ${url}`)}
+  }
+  throw new Error(`Optimized PDF image could not be loaded (${cleanPath}). ${errors.join(' | ')}`);
+}
 function reportLogoPayload(value:any){
   const raw=String(value||'').trim();
   if(!raw)return null;
@@ -131,12 +146,12 @@ function reportLogoPayload(value:any){
   if(/^\/9j\//.test(raw))return {type:'jpg',bytes:b64bytes(raw.replace(/\s+/g,''))};
   return null;
 }
-async function embedReportLogo(pdf:any,value:any){
+async function embedReportLogo(pdf:any,value:any,optimizePdf=true){
   const custom=reportLogoPayload(value);
   if(custom){
     try{return custom.type==='jpg'?await pdf.embedJpg(custom.bytes):await pdf.embedPng(custom.bytes)}catch(_){}
   }
-  return await pdf.embedPng(b64bytes(REPORT_LOGO_BASE64));
+  return optimizePdf?await pdf.embedJpg(b64bytes(REPORT_LOGO_JPEG_BASE64)):await pdf.embedPng(b64bytes(REPORT_LOGO_BASE64));
 }
 function sampleFit(f:any,count=120,core:any=CHC_CORE){return core.sampleFit(f,count)}
 function sampleEsFit(points:XY[],order:number,yScale=1,count=180){
@@ -610,6 +625,7 @@ export function selectPumpCandidates(family:string,q:number,h:number,esPole=0,li
 }
 
 export async function generateCurvePdf(family:string,q:number,h:number,dutyText:string,baseUrl:string,esPole=0,forcedModel:string='',displayIdentity:any=null){
+  const optimizePdf=displayIdentity?.optimized_pdf!==false;
   const fam=String(family||'').toUpperCase(),isChc=isChcFamily(fam),isBfi=isBfiFamily(fam),engine=isChc?chcEngine(fam):null;
   let model='',motorKw=0,motorHp=0,eff=0,npsh=0,selectionShaft=0,dutyBrakeHp=0,rpm=0,pole=2,hz=50;
   let suction='-',discharge='-',stages=0,impellerMm=0,maxPressure=0,dim:any={},esPs:any=null,weightKg=0,phase='3Ph';
@@ -678,22 +694,23 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
   ];
   const pdf=await PDFDocument.create(),regular=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
   const font={regular,bold};
-  const logo=await embedReportLogo(pdf,displayIdentity?.logo);
+  const logo=await embedReportLogo(pdf,displayIdentity?.logo,optimizePdf);
   let dimImage:any=null;
   if(isChc){
     const series=String((selectChc(q,h,forcedModel,fam) as any)?.series||'');
     let b64='';
     if(engine?.generation==='G1'){
       const key=chcG1DimensionImageKey(series,displayIdentity?.material);
-      if(key)dimImage=await embedPublicPng(pdf,baseUrl,`assets/chc-g1-dimensions/${key}.png`);
+      if(key){if(optimizePdf){try{dimImage=await embedPublicJpg(pdf,baseUrl,`assets/pdf-optimized/chc-g1-dimensions/${key}.jpg`)}catch(_){dimImage=await embedPublicPng(pdf,baseUrl,`assets/chc-g1-dimensions/${key}.png`)}}else dimImage=await embedPublicPng(pdf,baseUrl,`assets/chc-g1-dimensions/${key}.png`);}
     }else{
       b64=String((CHC_DIMENSION_BASE64 as any)[series]||'');
-      if(b64)dimImage=await pdf.embedPng(b64bytes(b64));
+      if(optimizePdf){const jpg=String((CHC_DIMENSION_JPEG_BASE64 as any)[series]||'');if(jpg)dimImage=await pdf.embedJpg(b64bytes(jpg));else if(b64)dimImage=await pdf.embedPng(b64bytes(b64));}
+      else if(b64)dimImage=await pdf.embedPng(b64bytes(b64));
     }
   }else if(isBfi){
     const summary=bfiDimensionSummary(model,'',dim,phase,weightKg);
-    if(summary.image){try{dimImage=await embedPublicPng(pdf,baseUrl,`assets/bfi-dimensions/${summary.image}`)}catch(error){console.warn('BFI dimension drawing unavailable',error)}}
-  }else dimImage=await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
+    if(summary.image){try{if(optimizePdf){const jpg=String(summary.image).replace(/\.png$/i,'.jpg');try{dimImage=await embedPublicJpg(pdf,baseUrl,`assets/pdf-optimized/bfi-dimensions/${jpg}`)}catch(_){dimImage=await embedPublicPng(pdf,baseUrl,`assets/bfi-dimensions/${summary.image}`)}}else dimImage=await embedPublicPng(pdf,baseUrl,`assets/bfi-dimensions/${summary.image}`)}catch(error){console.warn('BFI dimension drawing unavailable',error)}}
+  }else dimImage=optimizePdf?await pdf.embedJpg(b64bytes(ES_DIMENSION_JPEG_BASE64)):await pdf.embedPng(b64bytes(ES_DIMENSION_BASE64));
 
   const bfiMotorEff=phase==='1Ph'?'IE1':'IE2',mt=motorTech(motorHp,pole,isChc?String(engine?.motorEff||'IE3'):isBfi?bfiMotorEff:'IE3',phase);
   const pumpEnvelope=isChc?(Number(dim.d1||0)/2+Number(dim.d2||0)):0;
@@ -715,11 +732,11 @@ export async function generateCurvePdf(family:string,q:number,h:number,dutyText:
   pdf.setSubject('KeySuite KeySelector frozen-layout pump performance report');
   pdf.setProducer('KeySuite KeyBot - KeySelector Frozen Layout');
 
-  const bytes=await pdf.save(),safe=displayModel.replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
+  const bytes=await pdf.save({useObjectStreams:true}),safe=displayModel.replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
   return {
     bytes:new Uint8Array(bytes),filename:`${safe||fam}_Selection.pdf`,model:displayModel,master_model:model,brand:displayBrand,series:displaySeries,
     motor_kw:motorKw,motor_hp:motorHp,efficiency:eff,npshr:npsh,shaft_kw:selectionShaft,
     pole:fam==='ES'?pole:null,rpm,selector_core_version:isChc?engine?.core?.VERSION:isBfi?BFI_CORE.VERSION:null,
-    pdf_layout:'KeySelector frozen layout',pdf_layout_version:'4.12.20'
+    pdf_layout:'KeySelector frozen layout',pdf_layout_version:'4.23.18'
   };
 }
