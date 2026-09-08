@@ -360,12 +360,28 @@ async function saveQuoteRemote(q,{quiet=false}={}){
  }
  refreshQuotes();return saved
 }
-async function deleteQuoteRemote(id){
+function removeQuoteFromLocalCaches(id,no=''){
+ const logicalId=String(id||''),canonicalNo=canonicalQuotationNumber(no);
+ const keep=q=>String(q?.id||'')!==logicalId&&(!canonicalNo||canonicalQuotationNumber(q?.no)!==canonicalNo);
+ for(const key of ['ks_quotes','ks_quotes_backup_v236']){const rows=store.get(key,[]);if(Array.isArray(rows))store.set(key,rows.filter(keep))}
+ if(Array.isArray(secureQuotes))secureQuotes=secureQuotes.filter(keep);
+}
+async function deleteQuoteRemote(quoteOrId){
  const client=quotationClient();if(!client||quotationSyncMode!=='supabase')return;
- const quote=quotes().find(q=>String(q.id)===String(id)),remoteId=quote?.remoteStorageId||id,companyId=currentCompanyId();
- let result=await client.rpc('keysuite_delete_quotation_v409',{p_company_id:companyId,p_logical_id:String(id),p_legacy_id:String(remoteId||'')});
+ const quote=quoteOrId&&typeof quoteOrId==='object'?quoteOrId:quotes().find(q=>String(q.id)===String(quoteOrId));
+ const logicalId=String(quote?.id||quoteOrId||''),remoteId=quote?.remoteStorageId||logicalId,companyId=currentCompanyId();
+ let result=await client.rpc('keysuite_delete_quotation_v409',{p_company_id:companyId,p_logical_id:logicalId,p_legacy_id:String(remoteId||'')});
  if(result.error&&isMissingRpc(result.error,'keysuite_delete_quotation_v409'))result=await client.rpc('keysuite_delete_quotation_v236',{p_id:remoteId});
- if(result.error)throw result.error;cacheSecureQuotes(quotes().filter(q=>String(q.id)!==String(id)))
+ if(result.error)throw result.error;
+ // Some older delete RPCs can return successfully without removing the intended logical row.
+ // Verify against the secure list and use the legacy storage id as a final fallback when needed.
+ let check=null;
+ try{check=await listRemoteQuotes(client)}catch(error){console.warn('Quotation delete verification was deferred.',error)}
+ if(check){
+  const remaining=(check.data||[]).map(normalizeRemoteQuote).find(q=>String(q.id)===logicalId||(quote?.no&&canonicalQuotationNumber(q.no)===canonicalQuotationNumber(quote.no)));
+  if(remaining){const fallbackId=remaining.remoteStorageId||remoteId;const fallback=await client.rpc('keysuite_delete_quotation_v236',{p_id:fallbackId});if(fallback.error)throw fallback.error}
+ }
+ removeQuoteFromLocalCaches(logicalId,quote?.no||'')
 }
 async function cleanupRemoteQuotationDuplicates(client,rows=[]){
  const {duplicates}=dedupeQuotationRows(rows);if(!duplicates.length)return 0;let removed=0;
@@ -1220,7 +1236,7 @@ function loadQuote(id){
  window.KeySuiteTemplates?.loadSelection?.(q.quotationTemplateId||'',q.quotationTemplateSnapshot||null,(q.status||'')==='sealed');
  const items=q.items?.length?q.items:[{model:q.model||'',qty:q.qty||1,unitPrice:q.unitPrice||0,description:q.description||''}];setQuoteItems(items);showPage('quotation');setQuoteCustomerCollapsed(true);window.KeySuitePricing?.selectCustomer?.(quotationPricingCustomerId,false);syncStartCustomer(quotationPricingCustomerId);updateQuotationStateUi()
 }
-function deleteQuote(id){if(!confirm('Delete this quotation?'))return;const next=quotes().filter(x=>String(x.id)!==String(id));if(Array.isArray(secureQuotes))cacheSecureQuotes(next);else store.set('ks_quotes',next);deleteQuoteRemote(id).catch(error=>{console.error(error);alert(`Quotation could not be deleted from secure history: ${error.message||error}`);loadSecureQuotes()});refreshAll()}
+async function deleteQuote(id){if(!confirm('Delete this quotation?'))return;const quote=quotes().find(x=>String(x.id)===String(id));if(!quote)return;const no=quote.no||'';removeQuoteFromLocalCaches(id,no);cacheSecureQuotes(quotes());refreshAll();try{await deleteQuoteRemote(quote);removeQuoteFromLocalCaches(id,no);if(quotationClient()&&quotationSyncMode==='supabase')await loadSecureQuotes();else refreshAll()}catch(error){console.error(error);alert(`Quotation could not be deleted from secure history: ${error.message||error}`);await loadSecureQuotes()}}
 function newQuote(){
  quotationSessionId=newUuid();window.KeySuiteAssembly?.resetForNewQuotation?.();window.KeySuiteTemplates?.resetSelection?.();
  editingQuoteId=null;quotationStatus='new';quotationRevisionOf='';quotationRevisionRootId='';quotationRevisionNumber=0;quotationAudit=[];quotationPricingCustomerId='';quotationPricingCustomerSnapshot=null;

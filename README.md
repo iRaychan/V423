@@ -1,10 +1,7 @@
-# KeySuite V4.23.20 FULL CLEAN
+# KeySuite V4.25 UPGRADE
 
-Complete KeySuite release tree.
+Apply this folder over V4.23.20.
 
-## V4.23.20
-- Moved the global Optimized PDF preference into User Settings.
-- Optimized PDF now defaults OFF on V4.23.20 and Product/Selector PDF toolbars are restored to PDF / Assembly / Quote.
-- Quotation History is forced newest-first at final render, using the visible quotation Date first and quotation number/revision as tie-breakers.
+Includes the BFI multiplier safe-update migration, shared 3-second Currency & Multiplier unlock fix, BFI currency display, and Quotation History delete-cache repair.
 
-See `README_UPGRADE_V42320.md` for deployment details.
+See `README_UPGRADE_V425.md` for deployment steps.
